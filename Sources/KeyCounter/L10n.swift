@@ -58,6 +58,29 @@ final class L10n {
         ja("保存先を開く", en: "Open Save Folder")
     }
 
+    var resetMenuItem: String {
+        ja("リセット…", en: "Reset…")
+    }
+
+    var resetAlertTitle: String {
+        ja("カウントをリセットしますか？", en: "Reset all counts?")
+    }
+
+    var resetAlertMessage: String {
+        ja(
+            "すべてのキーカウントと記録開始日が本日にリセットされます。この操作は取り消せません。",
+            en: "All key counts and the start date will be reset to today. This cannot be undone."
+        )
+    }
+
+    var resetConfirmButton: String {
+        ja("リセット", en: "Reset")
+    }
+
+    var cancel: String {
+        ja("キャンセル", en: "Cancel")
+    }
+
     var quit: String {
         ja("終了", en: "Quit")
     }

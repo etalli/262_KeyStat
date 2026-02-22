@@ -58,6 +58,14 @@ final class KeyCountStore {
         queue.sync { store.startedAt }
     }
 
+    /// カウントと開始日を今日にリセットする
+    func reset() {
+        queue.sync {
+            store = CountData(startedAt: Date(), counts: [:])
+        }
+        queue.async { self.save() }
+    }
+
     // MARK: - Persistence
 
     private func save() {

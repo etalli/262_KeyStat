@@ -117,6 +117,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         openItem.target = self
         menu.addItem(openItem)
 
+        // リセット
+        let resetItem = NSMenuItem(title: l.resetMenuItem, action: #selector(resetCounts), keyEquivalent: "")
+        resetItem.target = self
+        menu.addItem(resetItem)
+
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(title: l.quit, action: #selector(quit), keyEquivalent: "q")
@@ -129,6 +134,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func changeLanguage(_ sender: NSMenuItem) {
         guard let lang = sender.representedObject as? Language else { return }
         L10n.shared.language = lang
+    }
+
+    @objc private func resetCounts() {
+        let l = L10n.shared
+        let alert = NSAlert()
+        alert.messageText = l.resetAlertTitle
+        alert.informativeText = l.resetAlertMessage
+        alert.addButton(withTitle: l.resetConfirmButton)
+        alert.addButton(withTitle: l.cancel)
+        alert.buttons[0].hasDestructiveAction = true
+
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            KeyCountStore.shared.reset()
+        }
     }
 
     @objc private func openSaveDir() {
