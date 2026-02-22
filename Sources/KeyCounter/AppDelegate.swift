@@ -6,32 +6,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var permissionTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 通知権限を初期化（シングルトン初回アクセス）
         _ = NotificationManager.shared
 
-        // メニューバーアイコンを設定
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.title = "⌨️"
 
         let menu = NSMenu()
-        menu.delegate = self   // menuWillOpen でメニューを再構築
+        menu.delegate = self
         statusItem.menu = menu
 
         startMonitor()
     }
 
-    // MARK: - 監視開始
+    // MARK: - Monitor
 
     private func startMonitor() {
         if monitor.start() {
-            print("[KeyCounter] 監視開始")
+            print("[KeyCounter] monitoring started")
         } else {
             showPermissionAlert()
-            // 権限が付与されるまで 3 秒ごとにリトライ
             permissionTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
                 if AXIsProcessTrusted() {
                     self?.monitor.start()
-                    print("[KeyCounter] 権限取得 → 監視開始")
+                    print("[KeyCounter] permission granted -> monitoring started")
                     timer.invalidate()
                 }
             }
@@ -39,15 +36,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showPermissionAlert() {
+        let l = L10n.shared
         let alert = NSAlert()
-        alert.messageText = "アクセシビリティ権限が必要です"
-        alert.informativeText = """
-            キー入力を監視するには、アクセシビリティ権限が必要です。
-            「システム設定 → プライバシーとセキュリティ → アクセシビリティ」で
-            KeyCounter を許可してください。
-            """
-        alert.addButton(withTitle: "システム設定を開く")
-        alert.addButton(withTitle: "あとで")
+        alert.messageText = l.accessibilityTitle
+        alert.informativeText = l.accessibilityMessage
+        alert.addButton(withTitle: l.openSystemSettings)
+        alert.addButton(withTitle: l.later)
 
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
@@ -58,22 +52,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - NSMenuDelegate
 
-    /// メニューを開く直前に最新データで再構築
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
-
-        let total = KeyCountStore.shared.totalCount
-        let topKeys = KeyCountStore.shared.topKeys(limit: 10)
+        let l = L10n.shared
 
         // ヘッダー：合計カウント
-        let header = NSMenuItem(title: "合計: \(total.formatted()) キー入力", action: nil, keyEquivalent: "")
+        let total = KeyCountStore.shared.totalCount
+        let header = NSMenuItem(
+            title: String(format: l.totalFormat, total.formatted()),
+            action: nil, keyEquivalent: ""
+        )
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
 
-        // 上位10キーを表示
+        // 上位10キー
+        let topKeys = KeyCountStore.shared.topKeys(limit: 10)
         if topKeys.isEmpty {
-            let empty = NSMenuItem(title: "（まだ入力なし）", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: l.noInput, action: nil, keyEquivalent: "")
             empty.isEnabled = false
             menu.addItem(empty)
         } else {
@@ -81,9 +77,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for (i, (key, count)) in topKeys.enumerated() {
                 let prefix = rankEmoji[safe: i] ?? "  "
                 let item = NSMenuItem(
-                    title: "\(prefix) \(key)  —  \(count.formatted()) 回",
-                    action: nil,
-                    keyEquivalent: ""
+                    title: "\(prefix) \(key)  —  \(count.formatted())",
+                    action: nil, keyEquivalent: ""
                 )
                 item.isEnabled = false
                 menu.addItem(item)
@@ -92,19 +87,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
 
-        // 保存先フォルダを Finder で開く
-        let openItem = NSMenuItem(title: "保存先を開く", action: #selector(openSaveDir), keyEquivalent: "")
+        // 言語サブメニュー
+        let langMenu = NSMenu()
+        for lang in Language.allCases {
+            let item = NSMenuItem(
+                title: lang.displayName,
+                action: #selector(changeLanguage(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = lang
+            item.state = (l.language == lang) ? .on : .off
+            langMenu.addItem(item)
+        }
+        let langItem = NSMenuItem(title: l.languageMenuTitle, action: nil, keyEquivalent: "")
+        langItem.submenu = langMenu
+        menu.addItem(langItem)
+
+        menu.addItem(.separator())
+
+        // 保存先を開く
+        let openItem = NSMenuItem(title: l.openSaveFolder, action: #selector(openSaveDir), keyEquivalent: "")
         openItem.target = self
         menu.addItem(openItem)
 
         menu.addItem(.separator())
 
-        let quitItem = NSMenuItem(title: "終了", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: l.quit, action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
 
     // MARK: - Actions
+
+    @objc private func changeLanguage(_ sender: NSMenuItem) {
+        guard let lang = sender.representedObject as? Language else { return }
+        L10n.shared.language = lang
+    }
 
     @objc private func openSaveDir() {
         let dir = FileManager.default
