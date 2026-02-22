@@ -102,7 +102,7 @@ CGEvent.tapCreate(callback: keyTapCallback)
 
 ### [KeyCountStore.swift](Sources/KeyStat/KeyCountStore.swift)
 
-カウントを管理し、ディスクへ永続化するシングルトンです。
+カウントを管理し、ディスクへ保存するシングルトンです。
 
 **スレッド安全:**
 
@@ -146,4 +146,4 @@ JSON は `.atomic` オプションで書き込み、ファイル破損を防ぎ�
 
 ### [L10n.swift](Sources/KeyStat/L10n.swift)
 
-ローカライズ文字列を一元管理するシングルトンです。English / 日本語 / システム自動検出をサポートし、言語設定は `UserDefaults` に永続化されます。
+ローカライズ文字列を一元管理するシングルトンです。English / 日本語 / システム自動検出をサポートし、言語設定は `UserDefaults` に保存されます。
