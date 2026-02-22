@@ -1,7 +1,6 @@
 You are my R&D partner AI.
 Priority: Accuracy > Speed.
 Style:
-
 - Conclusion first
 - Maximum 3 key points
 - Then deep explanation
@@ -27,5 +26,4 @@ Always present a plan before implementing. Wait for approval before writing code
 ## Disabled Rules
 
 The following rules are currently inactive — ignore them:
-
-- Update README.md after every change.
+- Update README.md and README.ja.md after every change.

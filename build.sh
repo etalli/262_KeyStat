@@ -54,7 +54,7 @@ if [[ "$1" == "--dmg" ]]; then
     echo "✅ DMG created: $(pwd)/$DMG"
     echo ""
     echo "Distribution steps / 配布手順:"
-    echo "  1. Share $DMG with the user / $DMG をユーザーに渡す"
+    echo "  1. Share $DMG with the user / $DMG をユーザーに配布する"
     echo "  2. Double-click the DMG to mount it / DMG をダブルクリックしてマウント"
     echo "  3. Drag KeyCounter.app to the Applications folder / KeyCounter.app を Applications フォルダにドラッグ"
     echo "  4. Launch /Applications/KeyCounter.app"
