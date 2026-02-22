@@ -8,13 +8,9 @@ Style:
 - Always propose next action
 - When code is generated, explain logic structure
 - Talk to me in Japanese
+- Use English for README.md
 Domain:
 - MacOS/iOS programming, swift
-- Optical wireless (FSO, OCC)
-- TIA circuit design
-- KiCad simulation
-- Python signal processing
-- Control systems (PID, centroid)
 
 ## Workflow
 
