@@ -14,23 +14,30 @@ final class KeyboardMonitor {
     /// 監視開始。アクセシビリティ権限がない場合は false を返す
     @discardableResult
     func start() -> Bool {
-        guard AXIsProcessTrusted() else { return false }
+        let trusted = AXIsProcessTrusted()
+        KeyCounter.log("start() called — AXIsProcessTrusted: \(trusted)")
+        guard trusted else { return false }
 
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
-        guard let tap = CGEvent.tapCreate(
+
+        // .listenOnly + .tailAppendEventTap = 最小権限での監視
+        let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
+            place: .tailAppendEventTap,
+            options: .listenOnly,
             eventsOfInterest: mask,
-            callback: keyTapCallback,   // @convention(c) 互換のグローバル関数
+            callback: keyTapCallback,
             userInfo: nil
-        ) else { return false }
+        )
+        KeyCounter.log("CGEvent.tapCreate result: \(tap != nil ? "success" : "nil (FAILED)")")
+        guard let tap else { return false }
 
         eventTap = tap
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         runLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
+        KeyCounter.log("Monitoring started successfully")
         return true
     }
 
