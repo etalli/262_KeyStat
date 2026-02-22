@@ -56,6 +56,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
         let l = L10n.shared
 
+        // ヘッダー：記録開始日
+        let startedAt = KeyCountStore.shared.startedAt
+        let sinceItem = NSMenuItem(title: l.recordingSince(startedAt), action: nil, keyEquivalent: "")
+        sinceItem.isEnabled = false
+        menu.addItem(sinceItem)
+
         // ヘッダー：合計カウント
         let total = KeyCountStore.shared.totalCount
         let header = NSMenuItem(

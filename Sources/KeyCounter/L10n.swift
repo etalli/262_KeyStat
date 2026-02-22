@@ -92,6 +92,16 @@ final class L10n {
         )
     }
 
+    /// 記録開始日を表示する文字列を返す
+    func recordingSince(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
+        fmt.locale = Locale(identifier: resolved == .japanese ? "ja_JP" : "en_US")
+        let dateStr = fmt.string(from: date)
+        return ja("\(dateStr) から記録中", en: "Since \(dateStr)")
+    }
+
     // MARK: - Helper
 
     private func ja(_ japanese: String, en english: String) -> String {
