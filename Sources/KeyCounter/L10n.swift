@@ -50,6 +50,10 @@ final class L10n {
         ja("合計: %@ キー入力", en: "Total: %@ keystrokes")
     }
 
+    var todayFormat: String {
+        ja("本日: %@ キー入力", en: "Today: %@ keystrokes")
+    }
+
     var noInput: String {
         ja("（まだ入力なし）", en: "(no input yet)")
     }
@@ -78,7 +82,7 @@ final class L10n {
     }
 
     var openSaveFolder: String {
-        ja("保存先を開く", en: "Open Save Folder")
+        ja("保存先を開く", en: "Open Log Folder")
     }
 
     var resetMenuItem: String {
@@ -106,6 +110,14 @@ final class L10n {
 
     var quit: String {
         ja("終了", en: "Quit")
+    }
+
+    var settingsMenuTitle: String {
+        ja("設定…", en: "Settings…")
+    }
+
+    var aboutMenuItem: String {
+        ja("KeyCounter について", en: "About KeyCounter")
     }
 
     var languageMenuTitle: String {

@@ -2,7 +2,7 @@ import AppKit
 
 /// CGEventTap でグローバルキー入力を監視するクラス
 final class KeyboardMonitor {
-    private var eventTap: CFMachPort?
+    private(set) var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
     /// 現在監視中かどうか
@@ -17,6 +17,18 @@ final class KeyboardMonitor {
         let trusted = AXIsProcessTrusted()
         KeyCounter.log("start() called — AXIsProcessTrusted: \(trusted)")
         guard trusted else { return false }
+
+        // 既存タップの再有効化を先に試みる（権限再付与後の高速復帰）
+        if let tap = eventTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+            if CGEvent.tapIsEnabled(tap: tap) {
+                KeyCounter.log("Existing tap re-enabled successfully")
+                return true
+            }
+            // 再有効化できなかった場合は破棄して新規作成
+            KeyCounter.log("Existing tap could not be re-enabled — recreating")
+            stop()
+        }
 
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
 
@@ -42,11 +54,14 @@ final class KeyboardMonitor {
     }
 
     func stop() {
-        guard let tap = eventTap else { return }
-        CGEvent.tapEnable(tap: tap, enable: false)
+        if let tap = eventTap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
         if let src = runLoopSource {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), src, .commonModes)
         }
+        eventTap = nil
+        runLoopSource = nil
     }
 
     /// CGKeyCode → 表示用キー名
@@ -81,6 +96,15 @@ private func keyTapCallback(
     event: CGEvent,
     refcon: UnsafeMutableRawPointer?
 ) -> Unmanaged<CGEvent>? {
+    // タイムアウトで無効化された場合は即座に再有効化
+    if type == .tapDisabledByTimeout {
+        KeyCounter.log("CGEventTap disabled by timeout — re-enabling")
+        if let tap = (NSApp.delegate as? AppDelegate)?.eventTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
+        return nil
+    }
+
     guard type == .keyDown else { return Unmanaged.passRetained(event) }
 
     let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))

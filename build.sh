@@ -1,9 +1,9 @@
 #!/bin/bash
-# KeyCounter ビルドスクリプト
-# 使い方:
+# KeyCounter Build Script
+# How to use:
 #   ./build.sh           # App Bundle のみ作成
 #   ./build.sh --run     # ビルド後に即時起動
-#   ./build.sh --install # ~/Applications にインストールして起動（推奨）
+#   ./build.sh --install # /Applications にインストールして起動
 #   ./build.sh --dmg     # DMG を作成（配布用）
 set -e
 
@@ -23,7 +23,7 @@ mkdir -p "$APP/Contents/Resources"
 cp .build/release/KeyCounter "$APP/Contents/MacOS/"
 cp Resources/Info.plist "$APP/Contents/"
 
-echo "✅ $APP を作成しました"
+echo "✅ $APP created"
 
 # --dmg オプションで DMG を作成
 if [[ "$1" == "--dmg" ]]; then
@@ -55,16 +55,16 @@ if [[ "$1" == "--dmg" ]]; then
     echo "  3. KeyCounter.app を Applications フォルダにドラッグ"
     echo "  4. /Applications/KeyCounter.app を起動"
 
-# --install: ~/Applications にインストール（アクセシビリティ権限の安定のため推奨）
+# --install: /Applications にインストール（アクセシビリティ権限の安定のため推奨）
 elif [[ "$1" == "--install" ]]; then
-    INSTALL_DIR="$HOME/Applications"
+    INSTALL_DIR="/Applications"
     INSTALL_PATH="$INSTALL_DIR/KeyCounter.app"
 
-    echo ""
-    echo "=== ~/Applications にインストール ==="
-    mkdir -p "$INSTALL_DIR"
-    rm -rf "$INSTALL_PATH"
-    cp -r "$APP" "$INSTALL_PATH"
+    echo "=== /Applications にインストール ==="
+    sudo mkdir -p "$INSTALL_DIR"
+    sudo rm -rf "$INSTALL_PATH"
+    sudo cp -r "$APP" "$INSTALL_PATH"
+    sudo chown -R "$(whoami)" "$INSTALL_PATH"
 
     # ad-hoc コード署名（アクセシビリティ権限の安定化）
     if command -v codesign &>/dev/null; then
@@ -73,17 +73,22 @@ elif [[ "$1" == "--install" ]]; then
     fi
 
     echo "✅ $INSTALL_PATH にインストールしました"
-    echo ""
 
     # 起動中のプロセスを終了してから再起動
     pkill -x KeyCounter 2>/dev/null || true
     sleep 0.5
+
+    # バイナリが変わるたびに古い TCC エントリをリセット（新バイナリへの権限付与を促す）
+    BUNDLE_ID=$(defaults read "$INSTALL_PATH/Contents/Info" CFBundleIdentifier 2>/dev/null)
+    if [[ -n "$BUNDLE_ID" ]]; then
+        tccutil reset Accessibility "$BUNDLE_ID" 2>/dev/null && \
+            echo "✅ アクセシビリティ権限をリセットしました（再許可が必要です）" || true
+    fi
+
     open "$INSTALL_PATH"
     echo "起動しました: $INSTALL_PATH"
-    echo ""
-    echo "【初回のみ】システム設定 → プライバシーとセキュリティ → アクセシビリティ"
-    echo "  で $INSTALL_PATH を許可してください。"
-    echo ""
+    echo "【毎回】システム設定 → プライバシーとセキュリティ → アクセシビリティ"
+    echo "  で KeyCounter.app を許可してください。"
     echo "ログ確認: tail -f ~/Library/Logs/KeyCounter/app.log"
 
 # --run オプションで即時起動

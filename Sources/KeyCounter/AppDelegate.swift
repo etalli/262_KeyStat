@@ -2,43 +2,92 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
-    private let monitor = KeyboardMonitor()
+    let monitor = KeyboardMonitor()
     private var permissionTimer: Timer?
+    private var healthTimer: Timer?
+
+    /// tapDisabledByTimeout コールバックから再有効化するために公開
+    var eventTap: CFMachPort? { monitor.eventTap }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = NotificationManager.shared
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "⌨️"
+        if let image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "KeyCounter") {
+            image.isTemplate = true
+            statusItem.button?.image = image
+        }
 
         let menu = NSMenu()
         menu.delegate = self
+        menu.autoenablesItems = false
         statusItem.menu = menu
 
         startMonitor()
+        setupHealthCheck()
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
     }
 
     // MARK: - Monitor
 
+    @objc private func appDidBecomeActive() {
+        guard !monitor.isRunning else { return }
+        KeyCounter.log("appDidBecomeActive — attempting monitor start")
+        if monitor.start() {
+            KeyCounter.log("appDidBecomeActive — monitoring started")
+            permissionTimer?.invalidate()
+            permissionTimer = nil
+        }
+    }
+
     private func startMonitor() {
         if monitor.start() {
-            print("[KeyCounter] monitoring started")
+            KeyCounter.log("monitoring started")
         } else {
-            showPermissionAlert()
-            permissionTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
-                guard let self else { return }
-                guard AXIsProcessTrusted() else { return }
+            // 現在のバイナリをアクセシビリティリストに登録し、設定画面を開く
+            let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(opts)
+            schedulePermissionRetry()
+        }
+    }
 
-                timer.invalidate()
+    /// アクセシビリティ権限が付与されるまで 3 秒ごとにリトライする
+    private func schedulePermissionRetry() {
+        guard permissionTimer == nil else { return }
+        permissionTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
+            guard let self else { return }
+            let trusted = AXIsProcessTrusted()
+            KeyCounter.log("permission retry tick — AXIsProcessTrusted: \(trusted)")
+            guard trusted else { return }
 
-                if self.monitor.start() {
-                    print("[KeyCounter] permission granted -> monitoring started")
-                } else {
-                    // 権限は付与されたが CGEventTap 作成に失敗 → 再起動が必要
-                    print("[KeyCounter] tap creation failed despite permission — restart needed")
-                    DispatchQueue.main.async { self.showRestartAlert() }
+            timer.invalidate()
+            self.permissionTimer = nil
+
+            if self.monitor.start() {
+                KeyCounter.log("permission granted -> monitoring started")
+            } else {
+                // 権限は付与されたが tap 作成失敗 → 自動再起動
+                KeyCounter.log("tap creation failed despite permission — auto-restarting")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartApp()
                 }
             }
+        }
+    }
+
+    /// 5 秒ごとに監視状態を確認し、停止していれば自動でリトライを開始する
+    private func setupHealthCheck() {
+        healthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            guard !self.monitor.isRunning, self.permissionTimer == nil else { return }
+            KeyCounter.log("health check: monitor stopped — scheduling retry")
+            self.schedulePermissionRetry()
         }
     }
 
@@ -84,67 +133,82 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
+        addStatusSection(to: menu)
+        addStatsSection(to: menu)
+        addSettingsSection(to: menu)
+    }
+
+    // MARK: - Menu sections
+
+    private func addStatusSection(to menu: NSMenu) {
         let l = L10n.shared
-
-        // 監視状態インジケーター
         let isRunning = monitor.isRunning
-        let statusTitle = isRunning ? l.monitoringActive : l.monitoringStopped
-        let statusColor: NSColor = isRunning ? .systemGreen : .systemRed
         let statusAttr = NSAttributedString(
-            string: statusTitle,
-            attributes: [.foregroundColor: statusColor]
+            string: isRunning ? l.monitoringActive : l.monitoringStopped,
+            attributes: [.foregroundColor: isRunning ? NSColor.systemGreen : NSColor.systemRed]
         )
-        let statusItem = NSMenuItem(title: "", action: isRunning ? nil : #selector(openAccessibilitySettings), keyEquivalent: "")
-        statusItem.attributedTitle = statusAttr
-        statusItem.target = self
-        menu.addItem(statusItem)
+        let item = NSMenuItem(
+            title: "",
+            action: isRunning ? nil : #selector(openAccessibilitySettings),
+            keyEquivalent: ""
+        )
+        item.attributedTitle = statusAttr
+        item.target = self
+        menu.addItem(item)
         menu.addItem(.separator())
+    }
 
-        // ヘッダー：記録開始日
-        let startedAt = KeyCountStore.shared.startedAt
-        let sinceItem = NSMenuItem(title: l.recordingSince(startedAt), action: nil, keyEquivalent: "")
-        sinceItem.isEnabled = false
-        menu.addItem(sinceItem)
+    private func addStatsSection(to menu: NSMenu) {
+        let l = L10n.shared
+        let store = KeyCountStore.shared
 
-        // ヘッダー：合計カウント
-        let total = KeyCountStore.shared.totalCount
-        let header = NSMenuItem(
-            title: String(format: l.totalFormat, total.formatted()),
+        menu.addItem(NSMenuItem(title: l.recordingSince(store.startedAt), action: nil, keyEquivalent: ""))
+        menu.addItem(NSMenuItem(
+            title: String(format: l.todayFormat, store.todayCount.formatted()),
             action: nil, keyEquivalent: ""
-        )
-        header.isEnabled = false
-        menu.addItem(header)
+        ))
+        menu.addItem(NSMenuItem(
+            title: String(format: l.totalFormat, store.totalCount.formatted()),
+            action: nil, keyEquivalent: ""
+        ))
         menu.addItem(.separator())
 
-        // 上位10キー
-        let topKeys = KeyCountStore.shared.topKeys(limit: 10)
+        let topKeys = store.topKeys(limit: 10)
         if topKeys.isEmpty {
-            let empty = NSMenuItem(title: l.noInput, action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            menu.addItem(empty)
+            menu.addItem(NSMenuItem(title: l.noInput, action: nil, keyEquivalent: ""))
         } else {
             let rankEmoji = ["🥇", "🥈", "🥉"]
             for (i, (key, count)) in topKeys.enumerated() {
                 let prefix = rankEmoji[safe: i] ?? "  "
-                let item = NSMenuItem(
+                menu.addItem(NSMenuItem(
                     title: "\(prefix) \(key)  —  \(count.formatted())",
                     action: nil, keyEquivalent: ""
-                )
-                item.isEnabled = false
-                menu.addItem(item)
+                ))
             }
         }
-
         menu.addItem(.separator())
+    }
 
-        // 言語サブメニュー
+    private func addSettingsSection(to menu: NSMenu) {
+        let l = L10n.shared
+
+        // About
+        let aboutItem = NSMenuItem(title: l.aboutMenuItem, action: #selector(showAboutPanel), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        // Settings… サブメニュー（保存先 + 言語 + リセット）
+        let settingsMenu = NSMenu()
+
+        let openItem = NSMenuItem(title: l.openSaveFolder, action: #selector(openSaveDir), keyEquivalent: "")
+        openItem.target = self
+        settingsMenu.addItem(openItem)
+
+        settingsMenu.addItem(.separator())
+
         let langMenu = NSMenu()
         for lang in Language.allCases {
-            let item = NSMenuItem(
-                title: lang.displayName,
-                action: #selector(changeLanguage(_:)),
-                keyEquivalent: ""
-            )
+            let item = NSMenuItem(title: lang.displayName, action: #selector(changeLanguage(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = lang
             item.state = (l.language == lang) ? .on : .off
@@ -152,19 +216,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         let langItem = NSMenuItem(title: l.languageMenuTitle, action: nil, keyEquivalent: "")
         langItem.submenu = langMenu
-        menu.addItem(langItem)
+        settingsMenu.addItem(langItem)
 
-        menu.addItem(.separator())
+        settingsMenu.addItem(.separator())
 
-        // 保存先を開く
-        let openItem = NSMenuItem(title: l.openSaveFolder, action: #selector(openSaveDir), keyEquivalent: "")
-        openItem.target = self
-        menu.addItem(openItem)
-
-        // リセット
         let resetItem = NSMenuItem(title: l.resetMenuItem, action: #selector(resetCounts), keyEquivalent: "")
         resetItem.target = self
-        menu.addItem(resetItem)
+        settingsMenu.addItem(resetItem)
+
+        let settingsItem = NSMenuItem(title: l.settingsMenuTitle, action: nil, keyEquivalent: "")
+        settingsItem.submenu = settingsMenu
+        menu.addItem(settingsItem)
 
         menu.addItem(.separator())
 
@@ -193,6 +255,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if alert.runModal() == .alertFirstButtonReturn {
             KeyCountStore.shared.reset()
         }
+    }
+
+    @objc private func showAboutPanel() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(nil)
     }
 
     @objc private func openAccessibilitySettings() {

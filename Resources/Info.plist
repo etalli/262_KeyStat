@@ -11,10 +11,12 @@
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>0.3</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>© 2026 k2. All rights reserved.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
-    <!-- Dockに表示しないメニューバー専用アプリ -->
+    <!-- Menubar special application, not displayed in Dock -->
     <key>LSUIElement</key>
     <true/>
 </dict>
