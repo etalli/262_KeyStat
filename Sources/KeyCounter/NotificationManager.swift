@@ -16,7 +16,7 @@ final class NotificationManager {
     func notify(key: String, count: Int) {
         let content = UNMutableNotificationContent()
         content.title = "⌨️ KeyCounter"
-        content.body = "「\(key)」が \(count.formatted()) 回に達しました！"
+        content.body = L10n.shared.notificationBody(key: key, count: count)
         content.sound = .default
 
         let request = UNNotificationRequest(
