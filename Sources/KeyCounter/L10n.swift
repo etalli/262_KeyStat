@@ -62,6 +62,21 @@ final class L10n {
         ja("● 停止中 — クリックして設定を開く", en: "● Stopped — click to open Settings")
     }
 
+    var restartTitle: String {
+        ja("再起動が必要です", en: "Restart Required")
+    }
+
+    var restartMessage: String {
+        ja(
+            "アクセシビリティ権限は付与されましたが、有効にするには KeyCounter の再起動が必要です。",
+            en: "Accessibility permission was granted, but KeyCounter must restart to activate monitoring."
+        )
+    }
+
+    var restartNow: String {
+        ja("今すぐ再起動", en: "Restart Now")
+    }
+
     var openSaveFolder: String {
         ja("保存先を開く", en: "Open Save Folder")
     }

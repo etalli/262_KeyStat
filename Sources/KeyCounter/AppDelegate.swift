@@ -26,13 +26,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             showPermissionAlert()
             permissionTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
-                if AXIsProcessTrusted() {
-                    self?.monitor.start()
+                guard let self else { return }
+                guard AXIsProcessTrusted() else { return }
+
+                timer.invalidate()
+
+                if self.monitor.start() {
                     print("[KeyCounter] permission granted -> monitoring started")
-                    timer.invalidate()
+                } else {
+                    // 権限は付与されたが CGEventTap 作成に失敗 → 再起動が必要
+                    print("[KeyCounter] tap creation failed despite permission — restart needed")
+                    DispatchQueue.main.async { self.showRestartAlert() }
                 }
             }
         }
+    }
+
+    private func showRestartAlert() {
+        let l = L10n.shared
+        let alert = NSAlert()
+        alert.messageText = l.restartTitle
+        alert.informativeText = l.restartMessage
+        alert.addButton(withTitle: l.restartNow)
+        alert.addButton(withTitle: l.later)
+
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            restartApp()
+        }
+    }
+
+    private func restartApp() {
+        let bundleURL = Bundle.main.bundleURL
+        let task = Process()
+        task.launchPath = "/usr/bin/open"
+        task.arguments = [bundleURL.path]
+        try? task.run()
+        NSApp.terminate(nil)
     }
 
     private func showPermissionAlert() {
