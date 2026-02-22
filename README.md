@@ -3,7 +3,7 @@
 English | [日本語](README.ja.md)
 
 A macOS menu bar app that monitors and records global keyboard input.
-Counts keystrokes per key, persists the data to a JSON file, and sends a macOS notification every 1,000 presses.
+Counts keystrokes per key, saves the data to a JSON file, and sends a macOS notification every 1,000 presses.
 
 ---
 
@@ -12,7 +12,7 @@ Counts keystrokes per key, persists the data to a JSON file, and sends a macOS n
 - **Global monitoring**: Counts all keystrokes regardless of the active application
 - **Menu bar statistics**: Click the keyboard icon to see today's count, total count, and the top 10 most-pressed keys
 - **Today's count**: Daily keystroke total, reset automatically at midnight
-- **Persistence**: Counts survive reboots — stored in a JSON file
+- **Data saving**: Counts survive reboots — stored in a JSON file
 - **Milestone notifications**: Native macOS notification at every 1,000 presses per key (1000, 2000, …)
 - **Multilingual UI**: English / 日本語 / System auto-detect
 - **Instant permission recovery**: Monitoring resumes automatically when Accessibility permission is granted
