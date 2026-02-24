@@ -30,7 +30,10 @@ final class KeyboardMonitor {
             stop()
         }
 
-        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        var mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        mask |= CGEventMask(1 << CGEventType.leftMouseDown.rawValue)
+        mask |= CGEventMask(1 << CGEventType.rightMouseDown.rawValue)
+        mask |= CGEventMask(1 << CGEventType.otherMouseDown.rawValue)
 
         // .listenOnly + .tailAppendEventTap = 最小権限での監視
         let tap = CGEvent.tapCreate(
@@ -38,7 +41,7 @@ final class KeyboardMonitor {
             place: .tailAppendEventTap,
             options: .listenOnly,
             eventsOfInterest: mask,
-            callback: keyTapCallback,
+            callback: inputTapCallback,
             userInfo: nil
         )
         KeyStat.log("CGEvent.tapCreate result: \(tap != nil ? "success" : "nil (FAILED)")")
@@ -90,7 +93,7 @@ final class KeyboardMonitor {
 
 // MARK: - CGEventTap コールバック
 // @convention(c) 互換にするためグローバル関数として定義（キャプチャ不要）
-private func keyTapCallback(
+private func inputTapCallback(
     proxy: CGEventTapProxy,
     type: CGEventType,
     event: CGEvent,
@@ -105,10 +108,23 @@ private func keyTapCallback(
         return nil
     }
 
-    guard type == .keyDown else { return Unmanaged.passRetained(event) }
+    let name: String
+    switch type {
+    case .keyDown:
+        let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+        name = KeyboardMonitor.keyName(for: code)
+    case .leftMouseDown:
+        name = "🖱Left"
+    case .rightMouseDown:
+        name = "🖱Right"
+    case .otherMouseDown:
+        // ボタン番号 2 = 中ボタン、それ以外は番号で識別
+        let btn = event.getIntegerValueField(.mouseEventButtonNumber)
+        name = btn == 2 ? "🖱Middle" : "🖱Button\(btn)"
+    default:
+        return Unmanaged.passRetained(event)
+    }
 
-    let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-    let name = KeyboardMonitor.keyName(for: code)
     let result = KeyCountStore.shared.increment(key: name)
 
     if result.milestone {

@@ -47,11 +47,11 @@ final class L10n {
     // MARK: - Strings
 
     var totalFormat: String {
-        ja("合計: %@ キー入力", en: "Total: %@ keystrokes")
+        ja("合計: %@ 入力", en: "Total: %@ inputs")
     }
 
     var todayFormat: String {
-        ja("本日: %@ キー入力", en: "Today: %@ keystrokes")
+        ja("本日: %@ 入力", en: "Today: %@ inputs")
     }
 
     var noInput: String {
@@ -141,6 +141,17 @@ final class L10n {
 
     var later: String {
         ja("あとで", en: "Later")
+    }
+
+    var showAllMenuItem: String {
+        ja("全件表示…", en: "Show All…")
+    }
+
+    func statsWindowHeader(since: String, today: String, total: String) -> String {
+        ja(
+            "\(since) から記録中  |  本日: \(today) 入力  |  合計: \(total) 入力",
+            en: "Since \(since)  |  Today: \(today) inputs  |  Total: \(total) inputs"
+        )
     }
 
     func notificationBody(key: String, count: Int) -> String {
