@@ -147,6 +147,18 @@ final class L10n {
         ja("全件表示…", en: "Show All…")
     }
 
+    var chartsMenuItem: String {
+        ja("グラフ表示…", en: "Show Charts…")
+    }
+
+    var exportCSVMenuItem: String {
+        ja("CSV 書き出し…", en: "Export CSV…")
+    }
+
+    var exportCSVSaveButton: String {
+        ja("ここに保存", en: "Save Here")
+    }
+
     func statsWindowHeader(since: String, today: String, total: String) -> String {
         ja(
             "\(since) から記録中  |  本日: \(today) 入力  |  合計: \(total) 入力",

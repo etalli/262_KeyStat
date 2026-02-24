@@ -92,6 +92,79 @@ final class KeyCountStore {
         }
     }
 
+    /// サマリー CSV（rank,key,total）を返す
+    func exportSummaryCSV() -> String {
+        queue.sync {
+            var lines = ["rank,key,total"]
+            for (i, (key, total)) in store.counts.sorted(by: { $0.value > $1.value }).enumerated() {
+                let escaped = key.contains(",") ? "\"\(key)\"" : key
+                lines.append("\(i + 1),\(escaped),\(total)")
+            }
+            return lines.joined(separator: "\n")
+        }
+    }
+
+    /// 日別 CSV（date,key,count）を返す
+    func exportDailyCSV() -> String {
+        queue.sync {
+            var lines = ["date,key,count"]
+            for date in store.dailyCounts.keys.sorted() {
+                let dayCounts = store.dailyCounts[date] ?? [:]
+                for (key, count) in dayCounts.sorted(by: { $0.value > $1.value }) {
+                    let escaped = key.contains(",") ? "\"\(key)\"" : key
+                    lines.append("\(date),\(escaped),\(count)")
+                }
+            }
+            return lines.joined(separator: "\n")
+        }
+    }
+
+    /// 日別合計入力数を返す（日付昇順）
+    func dailyTotals() -> [(date: String, total: Int)] {
+        queue.sync {
+            store.dailyCounts
+                .map { (date: $0.key, total: $0.value.values.reduce(0, +)) }
+                .sorted { $0.date < $1.date }
+        }
+    }
+
+    /// キータイプ別の累計カウントを返す（多い順）
+    func countsByType() -> [(type: KeyType, count: Int)] {
+        queue.sync {
+            var totals: [KeyType: Int] = [:]
+            for (key, count) in store.counts {
+                totals[KeyType.classify(key), default: 0] += count
+            }
+            return KeyType.allCases
+                .compactMap { t in totals[t].map { (type: t, count: $0) } }
+                .filter { $0.count > 0 }
+                .sorted { $0.count > $1.count }
+        }
+    }
+
+    /// 直近 recentDays 日間の上位 limit キーを (date, key, count) で返す
+    func topKeysPerDay(limit: Int = 10, recentDays: Int = 14) -> [(date: String, key: String, count: Int)] {
+        queue.sync {
+            let dates = Array(store.dailyCounts.keys.sorted().suffix(recentDays))
+            // 対象期間の合算で上位 limit キーを決定
+            var combined: [String: Int] = [:]
+            for date in dates {
+                for (k, v) in store.dailyCounts[date] ?? [:] {
+                    combined[k, default: 0] += v
+                }
+            }
+            let topKeyNames = combined.sorted { $0.value > $1.value }.prefix(limit).map { $0.key }
+            var result: [(date: String, key: String, count: Int)] = []
+            for date in dates {
+                let dayCounts = store.dailyCounts[date] ?? [:]
+                for key in topKeyNames {
+                    result.append((date: date, key: key, count: dayCounts[key] ?? 0))
+                }
+            }
+            return result
+        }
+    }
+
     /// 全キー・ボタンを累計降順で返す（total / today の両方を含む）
     func allEntries() -> [(key: String, total: Int, today: Int)] {
         queue.sync {
