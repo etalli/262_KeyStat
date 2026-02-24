@@ -2,18 +2,20 @@
 
 English | [日本語](README.ja.md)
 
-A macOS menu bar app that monitors and records global keyboard input.
-Counts keystrokes per key, saves the data to a JSON file, and sends a macOS notification every 1,000 presses.
+A macOS menu bar app that monitors and records global keyboard and mouse input.
+Counts keystrokes and mouse clicks per key/button, saves the data to a JSON file, and sends a macOS notification every 1,000 presses.
 
 ---
 
 ## Features
 
-- **Global monitoring**: Counts all keystrokes regardless of the active application
-- **Menu bar statistics**: Click the keyboard icon to see today's count, total count, and the top 10 most-pressed keys
-- **Today's count**: Daily keystroke total, reset automatically at midnight
+- **Global monitoring**: Counts all keystrokes and mouse clicks regardless of the active application
+- **Mouse click tracking**: Left / Right / Middle buttons and extra buttons are counted separately
+- **Menu bar statistics**: Click the keyboard icon to see today's count, total count, and the top 10 most-used keys/buttons
+- **Show All**: Open a full ranked list of every key and mouse button with total and today's counts
+- **Today's count**: Daily input total, reset automatically at midnight
 - **Data saving**: Counts survive reboots — stored in a JSON file
-- **Milestone notifications**: Native macOS notification at every 1,000 presses per key (1000, 2000, …)
+- **Milestone notifications**: Native macOS notification at every 1,000 presses per key/button (1000, 2000, …)
 - **Multilingual UI**: English / 日本語 / System auto-detect
 - **Instant permission recovery**: Monitoring resumes automatically when Accessibility permission is granted
 
@@ -103,8 +105,8 @@ An alert is shown on first launch if the permission is missing.
 
 | | Details |
 |---|---|
-| **Records** | Key names (e.g. `Space`, `e`) and press counts only |
-| **Does NOT record** | Typed text, sequences, passwords, clipboard content |
+| **Records** | Key names (e.g. `Space`, `e`) and mouse button names (e.g. `🖱Left`) with press counts only |
+| **Does NOT record** | Typed text, sequences, passwords, clipboard content, or mouse cursor position |
 | **Storage** | Local JSON file only — no network transmission |
 | **Event access** | `.listenOnly` tap — read-only, cannot inject or modify keystrokes |
 
