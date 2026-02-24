@@ -89,6 +89,36 @@ final class KeyboardMonitor {
         ]
         return map[code] ?? "Key(\(code))"
     }
+
+    /// オーバーレイ表示用: 修飾キーをプレフィックスとして結合した表示文字列を返す
+    /// 例: Shift+A → "⇧A"、Cmd+C → "⌘C"、Cmd+Shift+Z → "⇧⌘Z"、Return → "Return"（変換はOverlayViewModelに委譲）
+    static func overlayDisplayName(for event: CGEvent, keyName: String) -> String {
+        let flags = event.flags
+        var modPrefix = ""
+        var hasModifier = false
+        // macOS 慣例の順序: ⌃⌥⇧⌘
+        if flags.contains(.maskControl)   { modPrefix += "⌃"; hasModifier = true }
+        if flags.contains(.maskAlternate) { modPrefix += "⌥"; hasModifier = true }
+        if flags.contains(.maskShift)     { modPrefix += "⇧"; hasModifier = true }
+        if flags.contains(.maskCommand)   { modPrefix += "⌘"; hasModifier = true }
+
+        guard hasModifier else { return keyName }  // 修飾なし: OverlayViewModelのsymbol()に委譲
+
+        // 修飾あり: 特殊キーをシンボルに変換し、文字キーを大文字にする
+        let specialMap: [String: String] = [
+            "Return": "↵", "Delete": "⌫", "Space": "⎵",
+            "Tab": "⇥", "Escape": "⎋", "Enter(Num)": "↵", "⌦FwdDel": "⌦",
+        ]
+        let base: String
+        if let sym = specialMap[keyName] {
+            base = sym
+        } else if keyName.count == 1, keyName.first?.isLetter == true {
+            base = keyName.uppercased()
+        } else {
+            base = keyName
+        }
+        return modPrefix + base
+    }
 }
 
 // MARK: - Notification Names
@@ -141,8 +171,14 @@ private func inputTapCallback(
     }
 
     if type == .keyDown {
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .keystrokeInput, object: name)
+        // 修飾キー単体（左右両方）はオーバーレイに表示しない
+        let modifierKeyCodes: Set<CGKeyCode> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+        let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+        if !modifierKeyCodes.contains(code) {
+            let displayName = KeyboardMonitor.overlayDisplayName(for: event, keyName: name)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .keystrokeInput, object: displayName)
+            }
         }
     }
     return Unmanaged.passRetained(event)

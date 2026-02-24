@@ -178,13 +178,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if topKeys.isEmpty {
             menu.addItem(NSMenuItem(title: l.noInput, action: nil, keyEquivalent: ""))
         } else {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 150)]
             let rankEmoji = ["🥇", "🥈", "🥉"]
             for (i, (key, count)) in topKeys.enumerated() {
-                let prefix = rankEmoji[safe: i] ?? "  "
-                menu.addItem(NSMenuItem(
-                    title: "\(prefix) \(key)  —  \(count.formatted())",
-                    action: nil, keyEquivalent: ""
-                ))
+                let prefix = rankEmoji[safe: i] ?? "   "
+                let attrTitle = NSAttributedString(
+                    string: "\(prefix) \(key)\t\(count.formatted())",
+                    attributes: [.paragraphStyle: paragraphStyle]
+                )
+                let item = NSMenuItem()
+                item.attributedTitle = attrTitle
+                menu.addItem(item)
             }
         }
 

@@ -13,6 +13,9 @@ Counts keystrokes and mouse clicks per key/button, saves the data to a JSON file
 - **Mouse click tracking**: Left / Right / Middle buttons and extra buttons are counted separately
 - **Menu bar statistics**: Click the keyboard icon to see today's count, total count, and the top 10 most-used keys/buttons
 - **Show All**: Open a full ranked list of every key and mouse button with total and today's counts
+- **Charts**: Interactive charts window with four views — Top 20 Keys (horizontal bar, color-coded by type), Daily Totals (line chart), Key Categories (donut), Top 10 per Day (grouped bar)
+- **CSV Export**: Export all data as two CSV files — summary (total counts per key) and daily breakdown — saved to a folder of your choice
+- **Keystroke Overlay**: Real-time semi-transparent floating window in the bottom-left of the screen showing recent keystrokes; modifier combinations displayed as ⌘C / ⇧A style; fades out after 3 seconds of inactivity; toggled via the menu
 - **Today's count**: Daily input total, reset automatically at midnight
 - **Data saving**: Counts survive reboots — stored in a JSON file
 - **Milestone notifications**: Native macOS notification at every 1,000 presses per key/button (1000, 2000, …)

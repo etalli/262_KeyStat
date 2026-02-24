@@ -67,7 +67,7 @@ struct OverlayView: View {
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                     .frame(minWidth: 28)
-                    .multilineTextAlignment(.center)
+                    .fixedSize()  // 省略記号（...）を防ぐ
             }
         }
         .padding(.horizontal, 14)
@@ -76,6 +76,7 @@ struct OverlayView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(.black.opacity(0.55))
         )
+        .fixedSize()  // コンテンツの理想サイズで表示
         .opacity(viewModel.opacity)
     }
 }
@@ -88,6 +89,8 @@ final class KeystrokeOverlayController {
 
     private let panel: NSPanel
     private let viewModel = OverlayViewModel()
+    // NSHostingController をプロパティとして保持（解放を防ぐ）
+    private let hostVC: NSHostingController<OverlayView>
     private var observer: NSObjectProtocol?
 
     var isEnabled: Bool {
@@ -113,8 +116,9 @@ final class KeystrokeOverlayController {
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
-        let hostVC = NSHostingController(rootView: OverlayView(viewModel: viewModel))
-        panel.contentView = hostVC.view
+        // contentViewController 経由で設定することで、NSPanel が VC のライフタイムを管理する
+        hostVC = NSHostingController(rootView: OverlayView(viewModel: viewModel))
+        panel.contentViewController = hostVC
 
         NotificationCenter.default.addObserver(
             self,
@@ -155,13 +159,15 @@ final class KeystrokeOverlayController {
             queue: .main
         ) { [weak self] note in
             guard let self, let key = note.object as? String else { return }
-            if !self.panel.isVisible {
-                self.placePanel()
-                self.panel.orderFront(nil)
-            } else {
-                self.placePanel()
-            }
+            // append を先に呼ぶことで、placePanel() のサイズ計算が最新状態に基づく
             self.viewModel.append(keyName: key)
+            if !self.panel.isVisible {
+                self.panel.orderFront(nil)
+            }
+            // SwiftUI のレイアウトが確定してからサイズを更新する
+            DispatchQueue.main.async { [weak self] in
+                self?.placePanel()
+            }
         }
     }
 
