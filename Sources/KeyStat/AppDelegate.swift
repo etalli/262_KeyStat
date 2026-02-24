@@ -186,6 +186,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 ))
             }
         }
+
+        let showAllItem = NSMenuItem(title: l.showAllMenuItem, action: #selector(showAllStats), keyEquivalent: "")
+        showAllItem.target = self
+        menu.addItem(showAllItem)
         menu.addItem(.separator())
     }
 
@@ -236,6 +240,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     // MARK: - Actions
+
+    @objc private func showAllStats() {
+        StatsWindowController.shared.showWindow()
+    }
 
     @objc private func changeLanguage(_ sender: NSMenuItem) {
         guard let lang = sender.representedObject as? Language else { return }

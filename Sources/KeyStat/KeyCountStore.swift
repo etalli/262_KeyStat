@@ -92,6 +92,15 @@ final class KeyCountStore {
         }
     }
 
+    /// 全キー・ボタンを累計降順で返す（total / today の両方を含む）
+    func allEntries() -> [(key: String, total: Int, today: Int)] {
+        queue.sync {
+            let todayData = store.dailyCounts[todayKey] ?? [:]
+            return store.counts.sorted { $0.value > $1.value }
+                .map { (key: $0.key, total: $0.value, today: todayData[$0.key] ?? 0) }
+        }
+    }
+
     var totalCount: Int {
         queue.sync { store.counts.values.reduce(0, +) }
     }
