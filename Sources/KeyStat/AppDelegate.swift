@@ -172,6 +172,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             title: String(format: l.totalFormat, store.totalCount.formatted()),
             action: nil, keyEquivalent: ""
         ))
+        if let avgMs = store.averageIntervalMs {
+            menu.addItem(NSMenuItem(
+                title: String(format: "⌨ Avg interval: %.0f ms", avgMs),
+                action: nil, keyEquivalent: ""
+            ))
+        }
         menu.addItem(.separator())
 
         let topKeys = store.topKeys(limit: 10)

@@ -7,15 +7,22 @@ private struct CountData: Codable {
     var startedAt: Date
     var counts: [String: Int]
     var dailyCounts: [String: [String: Int]]   // "yyyy-MM-dd" -> keyName -> count
+    var lastInputTime: Date?
+    var avgIntervalMs: Double                  // Welford 移動平均（単位: ms）
+    var avgIntervalCount: Int                  // 平均の標本数
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
+        case lastInputTime, avgIntervalMs, avgIntervalCount
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
         self.startedAt = startedAt
         self.counts = counts
         self.dailyCounts = dailyCounts
+        self.lastInputTime = nil
+        self.avgIntervalMs = 0
+        self.avgIntervalCount = 0
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -25,6 +32,9 @@ private struct CountData: Codable {
         startedAt = try c.decode(Date.self, forKey: .startedAt)
         counts    = try c.decode([String: Int].self, forKey: .counts)
         dailyCounts = (try? c.decode([String: [String: Int]].self, forKey: .dailyCounts)) ?? [:]
+        lastInputTime   = try? c.decode(Date.self, forKey: .lastInputTime)
+        avgIntervalMs   = (try? c.decode(Double.self, forKey: .avgIntervalMs)) ?? 0
+        avgIntervalCount = (try? c.decode(Int.self, forKey: .avgIntervalCount)) ?? 0
     }
 }
 
@@ -61,15 +71,29 @@ final class KeyCountStore {
     }
 
     /// カウントを1増やす。1000の倍数に達したら milestone = true を返す
-    func increment(key: String) -> (count: Int, milestone: Bool) {
+    func increment(key: String, at timestamp: Date = Date()) -> (count: Int, milestone: Bool) {
         let today = todayKey
         let count: Int = queue.sync {
             store.counts[key, default: 0] += 1
             store.dailyCounts[today, default: [:]][key, default: 0] += 1
+            // Welford's online algorithm: 1000ms 以内の間隔のみ平均に加算
+            if let last = store.lastInputTime {
+                let intervalMs = timestamp.timeIntervalSince(last) * 1000
+                if intervalMs <= 1000 {
+                    store.avgIntervalCount += 1
+                    store.avgIntervalMs += (intervalMs - store.avgIntervalMs) / Double(store.avgIntervalCount)
+                }
+            }
+            store.lastInputTime = timestamp
             return store.counts[key, default: 0]
         }
         scheduleSave()
         return (count, count % 1000 == 0)
+    }
+
+    /// 平均入力間隔（ms）。サンプルが1件以上あれば返す
+    var averageIntervalMs: Double? {
+        queue.sync { store.avgIntervalCount > 0 ? store.avgIntervalMs : nil }
     }
 
     /// 本日（ローカル時刻）のキー入力合計

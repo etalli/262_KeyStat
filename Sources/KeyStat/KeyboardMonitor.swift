@@ -161,7 +161,8 @@ private func inputTapCallback(
         return Unmanaged.passRetained(event)
     }
 
-    let result = KeyCountStore.shared.increment(key: name)
+    let now = Date()
+    let result = KeyCountStore.shared.increment(key: name, at: now)
 
     if result.milestone {
         // 通知はメインスレッドで発行
