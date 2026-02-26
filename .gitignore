@@ -8,7 +8,7 @@
 xcuserdata/
 DerivedData/
 
-# ビルド生成物
+# build
 *.app/
 *.dmg
 
