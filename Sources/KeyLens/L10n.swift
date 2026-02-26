@@ -159,6 +159,14 @@ final class L10n {
         ja("キーオーバーレイ", en: "Keystroke Overlay")
     }
 
+    var avgIntervalFormat: String {
+        ja("⌨ 平均間隔: %.0f ms", en: "⌨ Avg interval: %.0f ms")
+    }
+
+    var minIntervalFormat: String {
+        ja("⌨ 最小間隔: %.0f ms", en: "⌨ Min interval: %.0f ms")
+    }
+
     var exportCSVMenuItem: String {
         ja("CSV 書き出し…", en: "Export CSV…")
     }

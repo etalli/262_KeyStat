@@ -93,20 +93,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func showRestartAlert() {
-        let l = L10n.shared
-        let alert = NSAlert()
-        alert.messageText = l.restartTitle
-        alert.informativeText = l.restartMessage
-        alert.addButton(withTitle: l.restartNow)
-        alert.addButton(withTitle: l.later)
-
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertFirstButtonReturn {
-            restartApp()
-        }
-    }
-
     private func restartApp() {
         let bundleURL = Bundle.main.bundleURL
         let task = Process()
@@ -114,21 +100,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         task.arguments = [bundleURL.path]
         try? task.run()
         NSApp.terminate(nil)
-    }
-
-    private func showPermissionAlert() {
-        let l = L10n.shared
-        let alert = NSAlert()
-        alert.messageText = l.accessibilityTitle
-        alert.informativeText = l.accessibilityMessage
-        alert.addButton(withTitle: l.openSystemSettings)
-        alert.addButton(withTitle: l.later)
-
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertFirstButtonReturn {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-            NSWorkspace.shared.open(url)
-        }
     }
 
     // MARK: - NSMenuDelegate
@@ -181,13 +152,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         ))
         if let avgMs = store.averageIntervalMs {
             menu.addItem(NSMenuItem(
-                title: String(format: "⌨ Avg interval: %.0f ms", avgMs),
+                title: String(format: l.avgIntervalFormat, avgMs),
                 action: nil, keyEquivalent: ""
             ))
         }
         if let minMs = store.todayMinIntervalMs {
             menu.addItem(NSMenuItem(
-                title: String(format: "⌨ Min interval: %.0f ms", minMs),
+                title: String(format: l.minIntervalFormat, minMs),
                 action: nil, keyEquivalent: ""
             ))
         }
