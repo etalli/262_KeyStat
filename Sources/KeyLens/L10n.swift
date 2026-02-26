@@ -72,8 +72,8 @@ final class L10n {
 
     var restartMessage: String {
         ja(
-            "アクセシビリティ権限は付与されましたが、有効にするには KeyStat の再起動が必要です。",
-            en: "Accessibility permission was granted, but KeyStat must restart to activate monitoring."
+            "アクセシビリティ権限は付与されましたが、有効にするには KeyLens の再起動が必要です。",
+            en: "Accessibility permission was granted, but KeyLens must restart to activate monitoring."
         )
     }
 
@@ -121,7 +121,7 @@ final class L10n {
     }
 
     var aboutMenuItem: String {
-        ja("KeyStat について", en: "About KeyStat")
+        ja("KeyLens について", en: "About KeyLens")
     }
 
     var languageMenuTitle: String {
@@ -134,8 +134,8 @@ final class L10n {
 
     var accessibilityMessage: String {
         ja(
-            "キー入力を監視するには、アクセシビリティ権限が必要です。\n「システム設定 → プライバシーとセキュリティ → アクセシビリティ」で\nKeyStat を許可してください。",
-            en: "KeyStat needs Accessibility permission to monitor keystrokes.\nGo to System Settings > Privacy & Security > Accessibility\nand enable KeyStat."
+            "キー入力を監視するには、アクセシビリティ権限が必要です。\n「システム設定 → プライバシーとセキュリティ → アクセシビリティ」で\nKeyLens を許可してください。",
+            en: "KeyLens needs Accessibility permission to monitor keystrokes.\nGo to System Settings > Privacy & Security > Accessibility\nand enable KeyLens."
         )
     }
 

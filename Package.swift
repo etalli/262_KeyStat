@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "KeyStat",
+    name: "KeyLens",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "KeyStat",
-            path: "Sources/KeyStat"
+            name: "KeyLens",
+            path: "Sources/KeyLens"
         )
     ]
 )

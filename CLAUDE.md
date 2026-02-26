@@ -24,12 +24,12 @@ Always present a plan before implementing. Wait for approval before writing code
 ./build.sh --dmg      # Build and create distributable DMG
 ```
 
-Logs: `tail -f ~/Library/Logs/KeyStat/app.log`
+Logs: `tail -f ~/Library/Logs/KeyLens/app.log`
 
 ## Conventions
 
 - Always use `build.sh` — never `swift build` alone (notifications require a proper App Bundle)
-- Data file: `~/Library/Application Support/KeyStat/counts.json`
+- Data file: `~/Library/Application Support/KeyLens/counts.json`
 - Bilingual docs: every doc has an English version and a Japanese counterpart
   - `README.md` / `README.ja.md`
   - `Architecture.md` / `Architecture.ja.md`

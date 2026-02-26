@@ -19,7 +19,7 @@ final class StatsWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "KeyStat — All Inputs"
+        window.title = "KeyLens — All Inputs"
         window.center()
         window.setFrameAutosaveName("StatsWindow")
         super.init(window: window)

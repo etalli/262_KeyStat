@@ -4,7 +4,7 @@
 
 ## 概要
 
-KeyStat はイベント監視・データ管理・UI 制御の 3 つのレイヤーで構成されています。
+KeyLens はイベント監視・データ管理・UI 制御の 3 つのレイヤーで構成されています。
 
 ```mermaid
 graph TD
@@ -28,7 +28,7 @@ graph TD
 ├── build.sh
 ├── Resources/
 │   └── Info.plist
-└── Sources/KeyStat/
+└── Sources/KeyLens/
     ├── main.swift
     ├── AppDelegate.swift
     ├── KeyboardMonitor.swift
@@ -69,7 +69,7 @@ NSMenuDelegate.menuWillOpen
 
 ## 各ファイルの役割
 
-### [main.swift](Sources/KeyStat/main.swift)
+### [main.swift](Sources/KeyLens/main.swift)
 
 エントリポイント。`NSApplication` を `.accessory` ポリシーで起動し、Dock に表示せずメニューバーのみに常駐させます。
 
@@ -79,7 +79,7 @@ app.setActivationPolicy(.accessory)
 
 ---
 
-### [KeyboardMonitor.swift](Sources/KeyStat/KeyboardMonitor.swift)
+### [KeyboardMonitor.swift](Sources/KeyLens/KeyboardMonitor.swift)
 
 `CGEventTap` を使ってシステム全体のキーダウンイベントを傍受します。
 
@@ -100,7 +100,7 @@ CGEvent.tapCreate(callback: keyTapCallback)
 
 ---
 
-### [KeyCountStore.swift](Sources/KeyStat/KeyCountStore.swift)
+### [KeyCountStore.swift](Sources/KeyLens/KeyCountStore.swift)
 
 カウントを管理し、ディスクへ保存するシングルトンです。
 
@@ -122,7 +122,7 @@ JSON は `.atomic` オプションで書き込み、ファイル破損を防ぎ�
 
 ---
 
-### [NotificationManager.swift](Sources/KeyStat/NotificationManager.swift)
+### [NotificationManager.swift](Sources/KeyLens/NotificationManager.swift)
 
 `UNUserNotificationCenter` でネイティブ通知を配信します。
 `trigger: nil` は即時配信（スケジューリングなし）を意味します。
@@ -130,7 +130,7 @@ JSON は `.atomic` オプションで書き込み、ファイル破損を防ぎ�
 
 ---
 
-### [AppDelegate.swift](Sources/KeyStat/AppDelegate.swift)
+### [AppDelegate.swift](Sources/KeyLens/AppDelegate.swift)
 
 メニューバー UI とアクセシビリティ権限復帰を管理します。
 
@@ -144,6 +144,6 @@ JSON は `.atomic` オプションで書き込み、ファイル破損を防ぎ�
 
 ---
 
-### [L10n.swift](Sources/KeyStat/L10n.swift)
+### [L10n.swift](Sources/KeyLens/L10n.swift)
 
 ローカライズ文字列を一元管理するシングルトンです。English / 日本語 / システム自動検出をサポートし、言語設定は `UserDefaults` に保存されます。

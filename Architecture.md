@@ -4,7 +4,7 @@ English | [日本語](Architecture.ja.md)
 
 ## Overview
 
-KeyStat is built around three layers: event monitoring, data management, and UI control.
+KeyLens is built around three layers: event monitoring, data management, and UI control.
 
 ```mermaid
 graph TD
@@ -28,7 +28,7 @@ graph TD
 ├── build.sh
 ├── Resources/
 │   └── Info.plist
-└── Sources/KeyStat/
+└── Sources/KeyLens/
     ├── main.swift
     ├── AppDelegate.swift
     ├── KeyboardMonitor.swift
@@ -69,7 +69,7 @@ NSMenuDelegate.menuWillOpen
 
 ## File responsibilities
 
-### [main.swift](Sources/KeyStat/main.swift)
+### [main.swift](Sources/KeyLens/main.swift)
 
 Entry point. Launches `NSApplication` with `.accessory` policy so the app appears only in the menu bar, not in the Dock.
 
@@ -79,7 +79,7 @@ app.setActivationPolicy(.accessory)
 
 ---
 
-### [KeyboardMonitor.swift](Sources/KeyStat/KeyboardMonitor.swift)
+### [KeyboardMonitor.swift](Sources/KeyLens/KeyboardMonitor.swift)
 
 Intercepts system-wide key-down events via `CGEventTap`.
 
@@ -100,7 +100,7 @@ Key code to name translation is handled by a static lookup table in `keyName(for
 
 ---
 
-### [KeyCountStore.swift](Sources/KeyStat/KeyCountStore.swift)
+### [KeyCountStore.swift](Sources/KeyLens/KeyCountStore.swift)
 
 Singleton that manages counts and persists them to disk.
 
@@ -122,7 +122,7 @@ JSON is written with `.atomic` to prevent file corruption. Consecutive writes wi
 
 ---
 
-### [NotificationManager.swift](Sources/KeyStat/NotificationManager.swift)
+### [NotificationManager.swift](Sources/KeyLens/NotificationManager.swift)
 
 Delivers native notifications via `UNUserNotificationCenter`.
 `trigger: nil` means immediate delivery (no scheduling).
@@ -130,7 +130,7 @@ Notification permission is requested on first singleton access.
 
 ---
 
-### [AppDelegate.swift](Sources/KeyStat/AppDelegate.swift)
+### [AppDelegate.swift](Sources/KeyLens/AppDelegate.swift)
 
 Manages the menu bar UI and accessibility permission recovery.
 
@@ -144,6 +144,6 @@ Rebuilding the menu on every keystroke is wasteful. Instead, `NSMenuDelegate.men
 
 ---
 
-### [L10n.swift](Sources/KeyStat/L10n.swift)
+### [L10n.swift](Sources/KeyLens/L10n.swift)
 
 Centralised localisation singleton. Supports English, Japanese, and system auto-detection. Language preference is persisted in `UserDefaults`.

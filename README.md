@@ -1,4 +1,4 @@
-# KeyStat
+# KeyLens
 
 English | [日本語](README.ja.md)
 
@@ -56,10 +56,10 @@ Counts keystrokes and mouse clicks per key/button, saves the data to a JSON file
 
 ```
 swift build -c release
-  └─ .build/release/KeyStat   (executable)
+  └─ .build/release/KeyLens   (executable)
 
-KeyStat.app/
-  ├── Contents/MacOS/KeyStat   <- executable copied here
+KeyLens.app/
+  ├── Contents/MacOS/KeyLens   <- executable copied here
   └── Contents/Info.plist         <- LSUIElement=true hides the Dock icon
 ```
 
@@ -67,18 +67,18 @@ KeyStat.app/
 
 | Step | What it does |
 |------|--------------|
-| `cp -r KeyStat.app /Applications/` | Installs to `/Applications` |
+| `cp -r KeyLens.app /Applications/` | Installs to `/Applications` |
 | `codesign --force --deep --sign -` | Ad-hoc signature (stabilises Accessibility permission) |
-| `pkill -x KeyStat` | Stops the running process before replacing the binary |
+| `pkill -x KeyLens` | Stops the running process before replacing the binary |
 | `tccutil reset Accessibility <bundle-id>` | Clears the stale TCC entry for the old binary hash |
-| `open ~/Applications/KeyStat.app` | Launches the new build |
+| `open ~/Applications/KeyLens.app` | Launches the new build |
 
 **Why TCC reset is needed:** macOS stores Accessibility permissions keyed by binary hash. Each `swift build` produces a new binary with a different hash, making the old TCC entry stale. Without resetting, `AXIsProcessTrusted()` returns `false` even though the toggle appears ON in System Settings.
 
 ### Logs
 
 ```bash
-tail -f ~/Library/Logs/KeyStat/app.log
+tail -f ~/Library/Logs/KeyLens/app.log
 ```
 
 ---
@@ -89,7 +89,7 @@ An alert is shown on first launch if the permission is missing.
 
 1. Click **Open System Settings**
 2. Go to **Privacy & Security > Accessibility**
-3. Enable **KeyStat**
+3. Enable **KeyLens**
 4. Switch back to any app — monitoring resumes instantly
 
 **Recovery mechanism (layered):**
@@ -141,7 +141,7 @@ The app currently uses an ad-hoc signature (`codesign --sign -`), which is suffi
 ## Data file
 
 ```
-~/Library/Application Support/KeyStat/counts.json
+~/Library/Application Support/KeyLens/counts.json
 ```
 
 ```json

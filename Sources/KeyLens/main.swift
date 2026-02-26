@@ -1,13 +1,13 @@
 import AppKit
 import Foundation
 
-// MARK: - ログ出力（~/Library/Logs/KeyStat/app.log に書き出す）
+// MARK: - ログ出力（~/Library/Logs/KeyLens/app.log に書き出す）
 
-enum KeyStat {
+enum KeyLens {
     private static let logURL: URL = {
         let dir = FileManager.default
             .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Logs/KeyStat")
+            .appendingPathComponent("Logs/KeyLens")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("app.log")
     }()
@@ -32,5 +32,5 @@ let app = NSApplication.shared
 app.setActivationPolicy(.accessory)   // Dockに表示しない
 let delegate = AppDelegate()
 app.delegate = delegate
-KeyStat.log("KeyStat launched — bundle: \(Bundle.main.bundlePath)")
+KeyLens.log("KeyLens launched — bundle: \(Bundle.main.bundlePath)")
 app.run()

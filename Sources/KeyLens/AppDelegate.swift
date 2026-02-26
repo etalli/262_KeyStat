@@ -15,7 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         _ = KeystrokeOverlayController.shared
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "KeyStat") {
+        if let image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "KeyLens") {
             image.isTemplate = true
             statusItem.button?.image = image
         }
@@ -40,9 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func appDidBecomeActive() {
         guard !monitor.isRunning else { return }
-        KeyStat.log("appDidBecomeActive — attempting monitor start")
+        KeyLens.log("appDidBecomeActive — attempting monitor start")
         if monitor.start() {
-            KeyStat.log("appDidBecomeActive — monitoring started")
+            KeyLens.log("appDidBecomeActive — monitoring started")
             permissionTimer?.invalidate()
             permissionTimer = nil
         }
@@ -50,7 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func startMonitor() {
         if monitor.start() {
-            KeyStat.log("monitoring started")
+            KeyLens.log("monitoring started")
         } else {
             // 現在のバイナリをアクセシビリティリストに登録し、設定画面を開く
             let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
@@ -65,17 +65,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         permissionTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
             guard let self else { return }
             let trusted = AXIsProcessTrusted()
-            KeyStat.log("permission retry tick — AXIsProcessTrusted: \(trusted)")
+            KeyLens.log("permission retry tick — AXIsProcessTrusted: \(trusted)")
             guard trusted else { return }
 
             timer.invalidate()
             self.permissionTimer = nil
 
             if self.monitor.start() {
-                KeyStat.log("permission granted -> monitoring started")
+                KeyLens.log("permission granted -> monitoring started")
             } else {
                 // 権限は付与されたが tap 作成失敗 → 自動再起動
-                KeyStat.log("tap creation failed despite permission — auto-restarting")
+                KeyLens.log("tap creation failed despite permission — auto-restarting")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.restartApp()
                 }
@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         healthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             guard !self.monitor.isRunning, self.permissionTimer == nil else { return }
-            KeyStat.log("health check: monitor stopped — scheduling retry")
+            KeyLens.log("health check: monitor stopped — scheduling retry")
             self.schedulePermissionRetry()
         }
     }
@@ -176,6 +176,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let avgMs = store.averageIntervalMs {
             menu.addItem(NSMenuItem(
                 title: String(format: "⌨ Avg interval: %.0f ms", avgMs),
+                action: nil, keyEquivalent: ""
+            ))
+        }
+        if let maxMs = store.todayMaxIntervalMs {
+            menu.addItem(NSMenuItem(
+                title: String(format: "⌨ Max interval: %.0f ms", maxMs),
                 action: nil, keyEquivalent: ""
             ))
         }
@@ -299,7 +305,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 try service.register()
             }
         } catch {
-            KeyStat.log("LaunchAtLogin toggle failed: \(error)")
+            KeyLens.log("LaunchAtLogin toggle failed: \(error)")
         }
     }
 
@@ -322,8 +328,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.begin { response in
             guard response == .OK, let dir = panel.url else { return }
-            let summaryURL = dir.appendingPathComponent("KeyStat_summary_\(tag).csv")
-            let dailyURL   = dir.appendingPathComponent("KeyStat_daily_\(tag).csv")
+            let summaryURL = dir.appendingPathComponent("KeyLens_summary_\(tag).csv")
+            let dailyURL   = dir.appendingPathComponent("KeyLens_daily_\(tag).csv")
             try? summary.write(to: summaryURL, atomically: true, encoding: .utf8)
             try? daily.write(to: dailyURL, atomically: true, encoding: .utf8)
             NSWorkspace.shared.open(dir)
@@ -363,7 +369,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openSaveDir() {
         let dir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("KeyStat")
+            .appendingPathComponent("KeyLens")
         NSWorkspace.shared.open(dir)
     }
 

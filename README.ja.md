@@ -1,4 +1,4 @@
-# KeyStat
+# KeyLens
 
 [English](README.md) | 日本語
 
@@ -56,10 +56,10 @@ macOS メニューバー常駐型のキーストローク・マウスクリッ�
 
 ```
 swift build -c release
-  └─ .build/release/KeyStat   （実行ファイル）
+  └─ .build/release/KeyLens   （実行ファイル）
 
-KeyStat.app/
-  ├── Contents/MacOS/KeyStat   <- 実行ファイルをここにコピー
+KeyLens.app/
+  ├── Contents/MacOS/KeyLens   <- 実行ファイルをここにコピー
   └── Contents/Info.plist         <- LSUIElement=true でDockに非表示
 ```
 
@@ -67,18 +67,18 @@ KeyStat.app/
 
 | ステップ | 内容 |
 |----------|------|
-| `cp -r KeyStat.app /Applications/` | `/Applications` にインストール |
+| `cp -r KeyLens.app /Applications/` | `/Applications` にインストール |
 | `codesign --force --deep --sign -` | ad-hoc 署名（アクセシビリティ権限を安定化） |
-| `pkill -x KeyStat` | 旧プロセスを停止してからバイナリを差し替え |
+| `pkill -x KeyLens` | 旧プロセスを停止してからバイナリを差し替え |
 | `tccutil reset Accessibility <bundle-id>` | 古いバイナリハッシュの TCC エントリを削除 |
-| `open /Applications/KeyStat.app` | 新しいビルドを起動 |
+| `open /Applications/KeyLens.app` | 新しいビルドを起動 |
 
 **TCC リセットが必要な理由:** macOS はアクセシビリティ権限をバイナリのハッシュ単位で管理しています。`swift build` のたびに新しいバイナリ（異なるハッシュ）が生成されるため、古い TCC エントリが陳腐化します。リセットしないと、システム設定でトグルが ON になっていても `AXIsProcessTrusted()` が `false` を返し続けます。
 
 ### ログ確認
 
 ```bash
-tail -f ~/Library/Logs/KeyStat/app.log
+tail -f ~/Library/Logs/KeyLens/app.log
 ```
 
 ---
@@ -89,7 +89,7 @@ tail -f ~/Library/Logs/KeyStat/app.log
 
 1. **「システム設定を開く」** をクリック
 2. **プライバシーとセキュリティ → アクセシビリティ** に移動
-3. **KeyStat** を有効化
+3. **KeyLens** を有効化
 4. 任意のアプリに戻る — モニタリングが即座に再開
 
 **権限復帰の仕組み（多段構成）:**
@@ -141,7 +141,7 @@ macOS はグローバル `CGEventTap` のインストールにユーザーの明
 ## データファイル
 
 ```
-~/Library/Application Support/KeyStat/counts.json
+~/Library/Application Support/KeyLens/counts.json
 ```
 
 ```json

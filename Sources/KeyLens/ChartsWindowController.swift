@@ -31,7 +31,7 @@ final class ChartsWindowController: NSWindowController {
     private init() {
         let hostVC = NSHostingController(rootView: ChartsView(model: model))
         let window = NSWindow(contentViewController: hostVC)
-        window.title = "KeyStat — Charts"
+        window.title = "KeyLens — Charts"
         window.setContentSize(NSSize(width: 700, height: 650))
         window.center()
         window.setFrameAutosaveName("ChartsWindow")
