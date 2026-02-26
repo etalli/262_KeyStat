@@ -121,6 +121,6 @@ else
     echo ""
     echo "Output / 保存先: $(pwd)/$APP"
     echo "Launch / 起動:              open $APP"
-    echo "Install (recommended) / 推奨インストール:  ./build.sh --install"
+    echo "Install / 推奨インストール:  ./build.sh --install"
     echo "Create DMG / DMG を作る:    ./build.sh --dmg"
 fi
