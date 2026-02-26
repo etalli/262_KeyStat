@@ -18,18 +18,18 @@ English | [日本語](README.ja.md)
 
 ## Features
 
-- ⌨️ **Global monitoring** — Counts all keystrokes and mouse clicks regardless of the active application
-- 🖱️ **Mouse click tracking** — Left / Right / Middle buttons and extra buttons are counted separately
-- 📊 **Menu bar statistics** — Today's count, total count, average keystroke interval, minimum keystroke interval (fastest burst), and the top 10 most-used keys/buttons
-- 📋 **Show All** — Full ranked list of every key and mouse button with total and today's counts
-- 📈 **Charts** — Four interactive views: Top 20 Keys (bar), Daily Totals (line), Key Categories (donut), Top 10 per Day (grouped bar)
-- 📤 **CSV Export** — Summary and daily breakdown exported to a folder of your choice
-- 🤖 **Copy Data to Clipboard** — Copy `counts.json` with a customizable AI prompt prepended; paste directly into an AI assistant for analysis
-- ✏️ **Edit AI Prompt** — Customize the prompt via **Settings… > Edit AI Prompt…**; stored separately per language
-- 🔍 **Keystroke Overlay** — Real-time floating window showing recent keystrokes (⌘C / ⇧A style); fades after 3 s of inactivity
-- 🔔 **Milestone notifications** — Native macOS notification at every 1,000 presses per key
-- 🌍 **Multilingual UI** — English / 日本語 / System auto-detect
-- ⚡ **Instant permission recovery** — Monitoring resumes automatically when Accessibility permission is granted
+- **Global monitoring** — Counts all keystrokes and mouse clicks regardless of the active application
+- **Mouse click tracking** — Left / Right / Middle buttons and extra buttons are counted separately
+- **Menu bar statistics** — Today's count, total count, average keystroke interval, minimum keystroke interval (fastest burst), and the top 10 most-used keys/buttons
+- **Show All** — Full ranked list of every key and mouse button with total and today's counts
+- **Charts** — Four interactive views: Top 20 Keys (bar), Daily Totals (line), Key Categories (donut), Top 10 per Day (grouped bar)
+- **CSV Export** — Summary and daily breakdown exported to a folder of your choice
+- **Copy Data to Clipboard** — Copy `counts.json` with a customizable AI prompt prepended; paste directly into an AI assistant for analysis
+- **Edit AI Prompt** — Customize the prompt via **Settings… > Edit AI Prompt…**; stored separately per language
+- **Keystroke Overlay** — Real-time floating window showing recent keystrokes (⌘C / ⇧A style); fades after 3 s of inactivity
+- **Milestone notifications** — Native macOS notification at every 1,000 presses per key
+- **Multilingual UI** — English / 日本語 / System auto-detect
+- **Instant permission recovery** — Monitoring resumes automatically when Accessibility permission is granted
 
 ---
 
