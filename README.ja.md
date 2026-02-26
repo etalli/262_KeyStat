@@ -2,6 +2,10 @@
 
 [English](README.md) | 日本語
 
+[![GitHub release](https://img.shields.io/github/v/release/etalli/262_KeyLens?style=flat-square&color=blue)](https://github.com/etalli/262_KeyLens/releases/latest)
+![macOS](https://img.shields.io/badge/macOS-13%2B-brightgreen?style=flat-square&logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange?style=flat-square&logo=swift)
+
 macOS メニューバー常駐型のキーストローク・マウスクリック監視・記録アプリです。
 キー／ボタンごとの入力回数を集計し、JSON ファイルに保存します。1,000 回押すごとに macOS 通知を送信します。
 
