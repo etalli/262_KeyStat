@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
@@ -221,6 +222,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Settings… サブメニュー
         let settingsMenu = NSMenu()
 
+        // ログイン時起動
+        let launchAtLoginItem = NSMenuItem(title: l.launchAtLogin, action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launchAtLoginItem.target = self
+        launchAtLoginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        settingsMenu.addItem(launchAtLoginItem)
+
+        settingsMenu.addItem(.separator())
+
         // 言語
         let langMenu = NSMenu()
         for lang in Language.allCases {
@@ -279,6 +288,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleOverlay() {
         KeystrokeOverlayController.shared.isEnabled.toggle()
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled {
+                try service.unregister()
+            } else {
+                try service.register()
+            }
+        } catch {
+            KeyStat.log("LaunchAtLogin toggle failed: \(error)")
+        }
     }
 
     @objc private func exportCSV() {

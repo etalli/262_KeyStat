@@ -10,10 +10,12 @@ private struct CountData: Codable {
     var lastInputTime: Date?
     var avgIntervalMs: Double                  // Welford 移動平均（単位: ms）
     var avgIntervalCount: Int                  // 平均の標本数
+    var modifiedCounts: [String: Int]          // "⌘c", "⇧a" など修飾キー+キー組み合わせ
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
         case lastInputTime, avgIntervalMs, avgIntervalCount
+        case modifiedCounts
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
@@ -23,6 +25,7 @@ private struct CountData: Codable {
         self.lastInputTime = nil
         self.avgIntervalMs = 0
         self.avgIntervalCount = 0
+        self.modifiedCounts = [:]
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -35,6 +38,7 @@ private struct CountData: Codable {
         lastInputTime   = try? c.decode(Date.self, forKey: .lastInputTime)
         avgIntervalMs   = (try? c.decode(Double.self, forKey: .avgIntervalMs)) ?? 0
         avgIntervalCount = (try? c.decode(Int.self, forKey: .avgIntervalCount)) ?? 0
+        modifiedCounts  = (try? c.decode([String: Int].self, forKey: .modifiedCounts)) ?? [:]
     }
 }
 
@@ -94,6 +98,23 @@ final class KeyCountStore {
     /// 平均入力間隔（ms）。サンプルが1件以上あれば返す
     var averageIntervalMs: Double? {
         queue.sync { store.avgIntervalCount > 0 ? store.avgIntervalMs : nil }
+    }
+
+    /// 修飾キー+キーの組み合わせカウントを1増やす
+    func incrementModified(key: String) {
+        queue.sync { store.modifiedCounts[key, default: 0] += 1 }
+        scheduleSave()
+    }
+
+    /// 修飾キー付きコンボの上位 limit 件を返す。prefix 指定で前方一致フィルタ
+    func topModifiedKeys(prefix: String = "", limit: Int = 20) -> [(key: String, count: Int)] {
+        queue.sync {
+            store.modifiedCounts
+                .filter { prefix.isEmpty || $0.key.hasPrefix(prefix) }
+                .sorted { $0.value > $1.value }
+                .prefix(limit)
+                .map { ($0.key, $0.value) }
+        }
     }
 
     /// 本日（ローカル時刻）のキー入力合計

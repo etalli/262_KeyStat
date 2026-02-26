@@ -32,6 +32,13 @@ struct DailyKeyEntry: Identifiable {
     init(_ t: (date: String, key: String, count: Int)) { date = t.date; key = t.key; count = t.count }
 }
 
+struct ShortcutEntry: Identifiable {
+    let id: String
+    let key: String
+    let count: Int
+    init(_ t: (key: String, count: Int)) { id = t.key; key = t.key; count = t.count }
+}
+
 // MARK: - ChartsView
 
 struct ChartsView: View {
@@ -44,6 +51,7 @@ struct ChartsView: View {
                 chartSection("Daily Totals") { dailyTotalsChart }
                 chartSection("Key Categories") { categoryChart }
                 chartSection("Top 10 Keys per Day") { perDayChart }
+                chartSection("⌘ Keyboard Shortcuts") { shortcutsChart }
             }
             .padding(24)
         }
@@ -234,6 +242,43 @@ struct ChartsView: View {
             .chartXScale(domain: keyOrder)
             .chartLegend(position: .top, alignment: .leading)
             .frame(height: 220)
+        }
+    }
+
+    // MARK: - Chart 5: ⌘ Keyboard Shortcuts (horizontal bar)
+
+    @ViewBuilder
+    private var shortcutsChart: some View {
+        if model.shortcuts.isEmpty {
+            emptyState
+        } else {
+            let keyOrder = model.shortcuts.map(\.key)
+            Chart(model.shortcuts) { item in
+                BarMark(
+                    x: .value("Count", item.count),
+                    y: .value("Shortcut", item.key)
+                )
+                .foregroundStyle(shortcutColor(item.key))
+                .cornerRadius(3)
+                .annotation(position: .trailing, spacing: 4) {
+                    Text(item.count.formatted())
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartYScale(domain: keyOrder.reversed())
+            .chartLegend(.hidden)
+            .frame(height: CGFloat(model.shortcuts.count * 26 + 24))
+        }
+    }
+
+    private func shortcutColor(_ key: String) -> Color {
+        switch key {
+        case "⌘c": return .green
+        case "⌘v": return .blue
+        case "⌘x": return .orange
+        case "⌘z": return .purple
+        default:    return .teal
         }
     }
 

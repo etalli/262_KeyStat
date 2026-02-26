@@ -85,6 +85,10 @@ final class L10n {
         ja("保存先を開く", en: "Open Log Folder")
     }
 
+    var launchAtLogin: String {
+        ja("ログイン時に起動", en: "Launch at Login")
+    }
+
     var resetMenuItem: String {
         ja("リセット…", en: "Reset…")
     }

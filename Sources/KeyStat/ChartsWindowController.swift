@@ -9,6 +9,7 @@ final class ChartDataModel: ObservableObject {
     @Published var dailyTotals: [DailyTotalEntry] = []
     @Published var categories:  [CategoryEntry]   = []
     @Published var perDayKeys:  [DailyKeyEntry]   = []
+    @Published var shortcuts:   [ShortcutEntry]   = []
 
     func reload() {
         let store   = KeyCountStore.shared
@@ -16,6 +17,7 @@ final class ChartDataModel: ObservableObject {
         dailyTotals = store.dailyTotals().map(DailyTotalEntry.init)
         categories  = store.countsByType().map(CategoryEntry.init)
         perDayKeys  = store.topKeysPerDay(limit: 10).map(DailyKeyEntry.init)
+        shortcuts   = store.topModifiedKeys(prefix: "⌘", limit: 20).map(ShortcutEntry.init)
     }
 }
 

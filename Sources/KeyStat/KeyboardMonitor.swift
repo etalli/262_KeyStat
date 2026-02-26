@@ -176,6 +176,17 @@ private func inputTapCallback(
         let modifierKeyCodes: Set<CGKeyCode> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
         let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
         if !modifierKeyCodes.contains(code) {
+            // 修飾キー+キーの組み合わせを記録（⌃⌥⇧⌘ 順プレフィックス）
+            let flags = event.flags.intersection([.maskControl, .maskAlternate, .maskShift, .maskCommand])
+            if !flags.isEmpty {
+                var prefix = ""
+                if flags.contains(.maskControl)   { prefix += "⌃" }
+                if flags.contains(.maskAlternate) { prefix += "⌥" }
+                if flags.contains(.maskShift)     { prefix += "⇧" }
+                if flags.contains(.maskCommand)   { prefix += "⌘" }
+                KeyCountStore.shared.incrementModified(key: "\(prefix)\(name)")
+            }
+
             let displayName = KeyboardMonitor.overlayDisplayName(for: event, keyName: name)
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .keystrokeInput, object: displayName)
