@@ -11,12 +11,12 @@ private struct CountData: Codable {
     var avgIntervalMs: Double                  // Welford 移動平均（単位: ms）
     var avgIntervalCount: Int                  // 平均の標本数
     var modifiedCounts: [String: Int]          // "⌘c", "⇧a" など修飾キー+キー組み合わせ
-    var dailyMaxIntervalMs: [String: Double]   // "yyyy-MM-dd" -> 当日の最大入力間隔（ms, 1000ms以内のみ）
+    var dailyMinIntervalMs: [String: Double]   // "yyyy-MM-dd" -> 当日の最小入力間隔（ms, 1000ms以内のみ）
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
         case lastInputTime, avgIntervalMs, avgIntervalCount
-        case modifiedCounts, dailyMaxIntervalMs
+        case modifiedCounts, dailyMinIntervalMs
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
@@ -27,7 +27,7 @@ private struct CountData: Codable {
         self.avgIntervalMs = 0
         self.avgIntervalCount = 0
         self.modifiedCounts = [:]
-        self.dailyMaxIntervalMs = [:]
+        self.dailyMinIntervalMs = [:]
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -41,7 +41,7 @@ private struct CountData: Codable {
         avgIntervalMs   = (try? c.decode(Double.self, forKey: .avgIntervalMs)) ?? 0
         avgIntervalCount = (try? c.decode(Int.self, forKey: .avgIntervalCount)) ?? 0
         modifiedCounts  = (try? c.decode([String: Int].self, forKey: .modifiedCounts)) ?? [:]
-        dailyMaxIntervalMs = (try? c.decode([String: Double].self, forKey: .dailyMaxIntervalMs)) ?? [:]
+        dailyMinIntervalMs = (try? c.decode([String: Double].self, forKey: .dailyMinIntervalMs)) ?? [:]
     }
 }
 
@@ -89,8 +89,8 @@ final class KeyCountStore {
                 if intervalMs <= 1000 {
                     store.avgIntervalCount += 1
                     store.avgIntervalMs += (intervalMs - store.avgIntervalMs) / Double(store.avgIntervalCount)
-                    if intervalMs > (store.dailyMaxIntervalMs[today] ?? 0) {
-                        store.dailyMaxIntervalMs[today] = intervalMs
+                    if intervalMs < (store.dailyMinIntervalMs[today] ?? Double.infinity) {
+                        store.dailyMinIntervalMs[today] = intervalMs
                     }
                 }
             }
@@ -106,10 +106,10 @@ final class KeyCountStore {
         queue.sync { store.avgIntervalCount > 0 ? store.avgIntervalMs : nil }
     }
 
-    /// 本日の最大入力間隔（ms, 1000ms以内のみ）。サンプルが1件以上あれば返す
-    var todayMaxIntervalMs: Double? {
+    /// 本日の最小入力間隔（ms, 1000ms以内のみ）。サンプルが1件以上あれば返す
+    var todayMinIntervalMs: Double? {
         let key = todayKey
-        return queue.sync { store.dailyMaxIntervalMs[key] }
+        return queue.sync { store.dailyMinIntervalMs[key] }
     }
 
     /// 修飾キー+キーの組み合わせカウントを1増やす

@@ -179,9 +179,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 action: nil, keyEquivalent: ""
             ))
         }
-        if let maxMs = store.todayMaxIntervalMs {
+        if let minMs = store.todayMinIntervalMs {
             menu.addItem(NSMenuItem(
-                title: String(format: "⌨ Max interval: %.0f ms", maxMs),
+                title: String(format: "⌨ Min interval: %.0f ms", minMs),
                 action: nil, keyEquivalent: ""
             ))
         }
