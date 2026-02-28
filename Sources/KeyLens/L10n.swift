@@ -159,6 +159,71 @@ final class L10n {
         ja("キーオーバーレイ", en: "Keystroke Overlay")
     }
 
+    var overlaySettingsMenuItem: String {
+        ja("オーバーレイ設定…", en: "Overlay Settings…")
+    }
+
+    var overlaySettingsWindowTitle: String {
+        ja("キーオーバーレイ設定", en: "Keystroke Overlay Settings")
+    }
+
+    var overlaySettingsPosition: String {
+        ja("表示位置", en: "Position")
+    }
+
+    var overlayPositionTopLeft: String {
+        ja("左上", en: "Top Left")
+    }
+
+    var overlayPositionTopRight: String {
+        ja("右上", en: "Top Right")
+    }
+
+    var overlayPositionBottomLeft: String {
+        ja("左下", en: "Bottom Left")
+    }
+
+    var overlayPositionBottomRight: String {
+        ja("右下", en: "Bottom Right")
+    }
+
+    var overlaySettingsFadeDelay: String {
+        ja("フェード持続時間", en: "Fade Delay")
+    }
+
+    func overlayFadeDelayLabel(_ sec: Double) -> String {
+        let s = Int(sec)
+        return ja("\(s)秒", en: "\(s)s")
+    }
+
+    var overlaySettingsOpacity: String {
+        ja("背景の不透明度", en: "Background Opacity")
+    }
+
+    var overlaySettingsFontSize: String {
+        ja("フォントサイズ", en: "Font Size")
+    }
+
+    var overlaySizeSmall: String {
+        ja("小", en: "Small")
+    }
+
+    var overlaySizeMedium: String {
+        ja("中", en: "Medium")
+    }
+
+    var overlaySizeLarge: String {
+        ja("大", en: "Large")
+    }
+
+    var overlaySettingsPreview: String {
+        ja("プレビュー", en: "Preview")
+    }
+
+    var overlaySettingsShowKeyCode: String {
+        ja("キーコードを表示", en: "Show Key Code")
+    }
+
     var avgIntervalFormat: String {
         ja("⌨ 平均間隔: %.0f ms", en: "⌨ Avg interval: %.0f ms")
     }
@@ -185,6 +250,14 @@ final class L10n {
 
     var editPromptTitle: String {
         ja("AIプロンプト", en: "AI Prompt")
+    }
+
+    var notificationIntervalMenuTitle: String {
+        ja("通知間隔", en: "Notify Every")
+    }
+
+    func notificationIntervalLabel(_ n: Int) -> String {
+        ja("\(n.formatted()) 回ごと", en: "Every \(n.formatted()) presses")
     }
 
     var editPromptSave: String {

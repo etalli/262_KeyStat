@@ -35,7 +35,7 @@ https://github.com/etalli/262_KeyStat
 Application名を KeyLens に変更しました。
 
 入力したkey, key combinationを左下に表示する機能を追加しました。
-まだ表示のカスタマイズ機能はありません。asdfasdf
+まだ表示のカスタマイズ機能はありません。
 ---
 KeyLens, 起動時に自動起動するオプションを追加しました。
 https://github.com/etalli/262_KeyLens
@@ -47,9 +47,7 @@ https://github.com/etalli/262_KeyLens
 ---
 
 
+
+
 ---
-Min interval トラッキング（最速バースト計測）
-Copy Data to Clipboard + Edit AI Prompt（言語別）
-build.sh の言語切替・メッセージ整理
-README 両言語版の更新
 

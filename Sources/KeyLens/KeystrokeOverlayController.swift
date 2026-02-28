@@ -6,6 +6,7 @@ import SwiftUI
 struct OverlayEntry: Identifiable {
     let id = UUID()
     let symbol: String
+    let keyCode: UInt16?
 }
 
 // MARK: - OverlayViewModel
@@ -13,13 +14,24 @@ struct OverlayEntry: Identifiable {
 final class OverlayViewModel: ObservableObject {
     @Published var keys: [OverlayEntry] = []
     @Published var opacity: Double = 0.0
+    @Published var config: OverlayConfig = .current
 
     private var fadeTimer: DispatchWorkItem?
     private let maxVisible = 10
-    private let fadeDelay = 3.0
+    private var fadeDelay: Double { OverlayConfig.current.fadeDelay }
 
-    func append(keyName: String) {
-        let entry = OverlayEntry(symbol: Self.symbol(for: keyName))
+    init() {
+        NotificationCenter.default.addObserver(
+            forName: .overlayConfigDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.config = .current
+        }
+    }
+
+    func append(keyName: String, keyCode: UInt16) {
+        let entry = OverlayEntry(symbol: Self.symbol(for: keyName), keyCode: keyCode)
         keys.append(entry)
         if keys.count > maxVisible { keys.removeFirst() }
 
@@ -63,18 +75,25 @@ struct OverlayView: View {
     var body: some View {
         HStack(spacing: 6) {
             ForEach(viewModel.keys) { entry in
-                Text(entry.symbol)
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .frame(minWidth: 28)
-                    .fixedSize()  // 省略記号（...）を防ぐ
+                VStack(spacing: 1) {
+                    Text(entry.symbol)
+                        .font(.system(size: viewModel.config.fontSize.pointSize, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 28)
+                        .fixedSize()  // 省略記号（...）を防ぐ
+                    if viewModel.config.showKeyCode, let code = entry.keyCode {
+                        Text("\(code)")
+                            .font(.system(size: viewModel.config.fontSize.pointSize * 0.45, weight: .regular, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.black.opacity(0.55))
+                .fill(.black.opacity(viewModel.config.backgroundOpacity))
         )
         .fixedSize()  // コンテンツの理想サイズで表示
         .opacity(viewModel.opacity)
@@ -126,6 +145,12 @@ final class KeystrokeOverlayController {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(repositionPanel),
+            name: .overlayConfigDidChange,
+            object: nil
+        )
 
         if isEnabled { startListening() }
     }
@@ -143,10 +168,19 @@ final class KeystrokeOverlayController {
         panel.contentView?.layoutSubtreeIfNeeded()
         let s = panel.contentView?.fittingSize ?? NSSize(width: 280, height: 50)
         let size = NSSize(width: max(s.width, 60), height: max(s.height, 44))
-        panel.setFrame(
-            NSRect(origin: NSPoint(x: f.minX + 20, y: f.minY + 20), size: size),
-            display: true
-        )
+        let margin: CGFloat = 20
+        let origin: NSPoint
+        switch OverlayConfig.current.position {
+        case .topLeft:
+            origin = NSPoint(x: f.minX + margin, y: f.maxY - size.height - margin)
+        case .topRight:
+            origin = NSPoint(x: f.maxX - size.width - margin, y: f.maxY - size.height - margin)
+        case .bottomLeft:
+            origin = NSPoint(x: f.minX + margin, y: f.minY + margin)
+        case .bottomRight:
+            origin = NSPoint(x: f.maxX - size.width - margin, y: f.minY + margin)
+        }
+        panel.setFrame(NSRect(origin: origin, size: size), display: true)
     }
 
     // MARK: - Listening
@@ -158,9 +192,9 @@ final class KeystrokeOverlayController {
             object: nil,
             queue: .main
         ) { [weak self] note in
-            guard let self, let key = note.object as? String else { return }
+            guard let self, let evt = note.object as? KeystrokeEvent else { return }
             // append を先に呼ぶことで、placePanel() のサイズ計算が最新状態に基づく
-            self.viewModel.append(keyName: key)
+            self.viewModel.append(keyName: evt.displayName, keyCode: evt.keyCode)
             if !self.panel.isVisible {
                 self.panel.orderFront(nil)
             }

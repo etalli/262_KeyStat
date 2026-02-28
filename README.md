@@ -106,7 +106,7 @@ Use **Settings… > Open Log Folder** to open the directory in Finder.
 | Step | What it does |
 |------|--------------|
 | `cp -r KeyLens.app /Applications/` | Installs to `/Applications` |
-| `codesign --force --deep --sign -` | Ad-hoc signature (stabilises Accessibility permission) |
+| `codesign --force --deep --sign -` | Ad-hoc signature (stabilizes Accessibility permission) |
 | `pkill -x KeyLens` | Stops the running process before replacing the binary |
 | `tccutil reset Accessibility <bundle-id>` | Clears the stale TCC entry for the old binary hash |
 | `open /Applications/KeyLens.app` | Launches the new build |

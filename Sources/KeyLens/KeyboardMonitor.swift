@@ -1,5 +1,12 @@
 import AppKit
 
+// MARK: - KeystrokeEvent
+
+struct KeystrokeEvent {
+    let displayName: String
+    let keyCode: UInt16
+}
+
 /// CGEventTap でグローバルキー入力を監視するクラス
 final class KeyboardMonitor {
     private(set) var eventTap: CFMachPort?
@@ -188,8 +195,9 @@ private func inputTapCallback(
             }
 
             let displayName = KeyboardMonitor.overlayDisplayName(for: event, keyName: name)
+            let evt = KeystrokeEvent(displayName: displayName, keyCode: code)
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .keystrokeInput, object: displayName)
+                NotificationCenter.default.post(name: .keystrokeInput, object: evt)
             }
         }
     }

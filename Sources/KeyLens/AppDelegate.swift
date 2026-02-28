@@ -191,11 +191,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let chartsItem = NSMenuItem(title: l.chartsMenuItem, action: #selector(showCharts), keyEquivalent: "")
         chartsItem.target = self
         menu.addItem(chartsItem)
-
-        let overlayItem = NSMenuItem(title: l.overlayMenuItem, action: #selector(toggleOverlay), keyEquivalent: "")
-        overlayItem.target = self
-        overlayItem.state = KeystrokeOverlayController.shared.isEnabled ? .on : .off
-        menu.addItem(overlayItem)
         menu.addItem(.separator())
     }
 
@@ -210,6 +205,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         launchAtLoginItem.target = self
         launchAtLoginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         settingsMenu.addItem(launchAtLoginItem)
+
+        let overlayItem = NSMenuItem(title: l.overlayMenuItem, action: #selector(toggleOverlay), keyEquivalent: "")
+        overlayItem.target = self
+        overlayItem.state = KeystrokeOverlayController.shared.isEnabled ? .on : .off
+        settingsMenu.addItem(overlayItem)
+
+        let overlaySettingsItem = NSMenuItem(title: l.overlaySettingsMenuItem, action: #selector(showOverlaySettings), keyEquivalent: "")
+        overlaySettingsItem.target = self
+        settingsMenu.addItem(overlaySettingsItem)
 
         settingsMenu.addItem(.separator())
 
@@ -245,6 +249,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         editPromptItem.target = self
         settingsMenu.addItem(editPromptItem)
 
+        // 通知間隔
+        let intervalMenu = NSMenu()
+        for interval in [100, 500, 1000, 5000, 10000] {
+            let item = NSMenuItem(title: l.notificationIntervalLabel(interval),
+                                  action: #selector(setMilestoneInterval(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.tag = interval
+            item.state = (KeyCountStore.milestoneInterval == interval) ? .on : .off
+            intervalMenu.addItem(item)
+        }
+        let intervalItem = NSMenuItem(title: l.notificationIntervalMenuTitle, action: nil, keyEquivalent: "")
+        intervalItem.submenu = intervalMenu
+        settingsMenu.addItem(intervalItem)
+
         settingsMenu.addItem(.separator())
 
         // 破壊的操作
@@ -279,6 +298,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleOverlay() {
         KeystrokeOverlayController.shared.isEnabled.toggle()
+    }
+
+    @objc private func showOverlaySettings() {
+        OverlaySettingsController.shared.showWindow()
     }
 
     @objc private func toggleLaunchAtLogin() {
@@ -324,6 +347,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func changeLanguage(_ sender: NSMenuItem) {
         guard let lang = sender.representedObject as? Language else { return }
         L10n.shared.language = lang
+    }
+
+    @objc private func setMilestoneInterval(_ sender: NSMenuItem) {
+        KeyCountStore.milestoneInterval = sender.tag
     }
 
     @objc private func resetCounts() {

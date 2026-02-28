@@ -201,3 +201,7 @@ Rebuilding the menu on every keystroke is wasteful. Instead, `NSMenuDelegate.men
 ### [L10n.swift](Sources/KeyLens/L10n.swift)
 
 Centralised localisation singleton. Supports English, Japanese, and system auto-detection. Language preference is persisted in `UserDefaults`.
+
+### Data Dir.
+
+~/Library/Application Support/KeyLens/ 

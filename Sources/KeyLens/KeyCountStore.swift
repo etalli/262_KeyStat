@@ -77,7 +77,13 @@ final class KeyCountStore {
         }
     }
 
-    /// カウントを1増やす。1000の倍数に達したら milestone = true を返す
+    /// 通知間隔（UserDefaults で永続化。デフォルト 1000）
+    static var milestoneInterval: Int {
+        get { let v = UserDefaults.standard.integer(forKey: "milestoneInterval"); return v > 0 ? v : 1000 }
+        set { UserDefaults.standard.set(newValue, forKey: "milestoneInterval") }
+    }
+
+    /// カウントを1増やす。milestoneInterval の倍数に達したら milestone = true を返す
     func increment(key: String, at timestamp: Date = Date()) -> (count: Int, milestone: Bool) {
         let today = todayKey
         let count: Int = queue.sync {
@@ -98,7 +104,7 @@ final class KeyCountStore {
             return store.counts[key, default: 0]
         }
         scheduleSave()
-        return (count, count % 1000 == 0)
+        return (count, count % KeyCountStore.milestoneInterval == 0)
     }
 
     /// 平均入力間隔（ms）。サンプルが1件以上あれば返す
@@ -251,6 +257,9 @@ final class KeyCountStore {
     // MARK: - Persistence
 
     /// 2秒以内の連続呼び出しをまとめて1回の書き込みに集約する
+    /// 新しい入力があるたびに「2秒後の保存予約」をキャンセルして作り直す。
+    /// これにより、タイピング中は保存が走らず、手が止まった瞬間にだけディスクに書き込まれるという、
+    /// 効率的な仕組み
     private func scheduleSave() {
         saveWorkItem?.cancel()
         let item = DispatchWorkItem { [weak self] in self?.save() }
