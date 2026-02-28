@@ -1,8 +1,8 @@
 import AppKit
 import ServiceManagement
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var statusItem: NSStatusItem!
+final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    @Published var isMonitoring = false
     let monitor = KeyboardMonitor()
     private var permissionTimer: Timer?
     private var healthTimer: Timer?
@@ -10,17 +10,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = NotificationManager.shared
         _ = KeystrokeOverlayController.shared
-
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: "KeyLens") {
-            image.isTemplate = true
-            statusItem.button?.image = image
-        }
-
-        let menu = NSMenu()
-        menu.delegate = self
-        menu.autoenablesItems = false
-        statusItem.menu = menu
 
         startMonitor()
         setupHealthCheck()
@@ -39,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !monitor.isRunning else { return }
         KeyLens.log("appDidBecomeActive — attempting monitor start")
         if monitor.start() {
+            isMonitoring = true
             KeyLens.log("appDidBecomeActive — monitoring started")
             permissionTimer?.invalidate()
             permissionTimer = nil
@@ -47,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startMonitor() {
         if monitor.start() {
+            isMonitoring = true
             KeyLens.log("monitoring started")
         } else {
             // 現在のバイナリをアクセシビリティリストに登録し、設定画面を開く
@@ -69,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.permissionTimer = nil
 
             if self.monitor.start() {
+                self.isMonitoring = true
                 KeyLens.log("permission granted -> monitoring started")
             } else {
                 // 権限は付与されたが tap 作成失敗 → 自動再起動
@@ -84,7 +76,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupHealthCheck() {
         healthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             guard let self else { return }
-            guard !self.monitor.isRunning, self.permissionTimer == nil else { return }
+            let running = self.monitor.isRunning
+            if self.isMonitoring != running { self.isMonitoring = running }
+            guard !running, self.permissionTimer == nil else { return }
             KeyLens.log("health check: monitor stopped — scheduling retry")
             self.schedulePermissionRetry()
         }

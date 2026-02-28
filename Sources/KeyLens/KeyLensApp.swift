@@ -1,7 +1,8 @@
 import AppKit
-import Foundation
+import SwiftUI
 
 // MARK: - ログ出力（~/Library/Logs/KeyLens/app.log に書き出す）
+// main.swift から移動
 
 enum KeyLens {
     private static let logURL: URL = {
@@ -26,11 +27,19 @@ enum KeyLens {
     }
 }
 
-// MARK: - App entry point
+// MARK: - App Entry Point
 
-let app = NSApplication.shared
-app.setActivationPolicy(.accessory)   // Dockに表示しない
-let delegate = AppDelegate()
-app.delegate = delegate
-KeyLens.log("KeyLens launched — bundle: \(Bundle.main.bundlePath)")
-app.run()
+@main
+struct KeyLensApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        MenuBarExtra {
+            MenuView()
+                .environmentObject(appDelegate)
+        } label: {
+            Label("KeyLens", systemImage: "keyboard")
+        }
+        .menuBarExtraStyle(.window)
+    }
+}

@@ -19,23 +19,23 @@ extension AppDelegate: NSTextViewDelegate {
 
 extension AppDelegate {
 
-    @objc func showAllStats() {
+    func showAllStats() {
         StatsWindowController.shared.showWindow()
     }
 
-    @objc func showCharts() {
+    func showCharts() {
         ChartsWindowController.shared.showWindow()
     }
 
-    @objc func toggleOverlay() {
+    func toggleOverlay() {
         KeystrokeOverlayController.shared.isEnabled.toggle()
     }
 
-    @objc func showOverlaySettings() {
+    func showOverlaySettings() {
         OverlaySettingsController.shared.showWindow()
     }
 
-    @objc func toggleLaunchAtLogin() {
+    func toggleLaunchAtLogin() {
         let service = SMAppService.mainApp
         do {
             if service.status == .enabled {
@@ -48,7 +48,7 @@ extension AppDelegate {
         }
     }
 
-    @objc func exportCSV() {
+    func exportCSV() {
         let store = KeyCountStore.shared
         let summary = store.exportSummaryCSV()
         let daily   = store.exportDailyCSV()
@@ -75,16 +75,15 @@ extension AppDelegate {
         }
     }
 
-    @objc func changeLanguage(_ sender: NSMenuItem) {
-        guard let lang = sender.representedObject as? Language else { return }
+    func changeLanguage(to lang: Language) {
         L10n.shared.language = lang
     }
 
-    @objc func setMilestoneInterval(_ sender: NSMenuItem) {
-        KeyCountStore.milestoneInterval = sender.tag
+    func setMilestoneInterval(_ interval: Int) {
+        KeyCountStore.milestoneInterval = interval
     }
 
-    @objc func resetCounts() {
+    func resetCounts() {
         let l = L10n.shared
         let alert = NSAlert()
         alert.messageText = l.resetAlertTitle
@@ -99,7 +98,7 @@ extension AppDelegate {
         }
     }
 
-    @objc func showAboutPanel() {
+    func showAboutPanel() {
         NSApp.activate(ignoringOtherApps: true)
         let l = L10n.shared
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
@@ -124,17 +123,21 @@ extension AppDelegate {
         let alert = NSAlert()
         alert.messageText = "KeyLens \(version)"
         alert.informativeText = ""
+        if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
+           let icon = NSImage(contentsOf: iconURL) {
+            alert.icon = icon
+        }
         alert.accessoryView = textView
         alert.addButton(withTitle: l.close)
         alert.runModal()
     }
 
-    @objc func openAccessibilitySettings() {
+    func openAccessibilitySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
         NSWorkspace.shared.open(url)
     }
 
-    @objc func copyDataToClipboard() {
+    func copyDataToClipboard() {
         let url = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("KeyLens/counts.json")
@@ -145,7 +148,7 @@ extension AppDelegate {
         NSPasteboard.general.setString(content, forType: .string)
     }
 
-    @objc func editAIPrompt() {
+    func editAIPrompt() {
         let l = L10n.shared
         let alert = NSAlert()
         alert.messageText = l.editPromptTitle
@@ -173,14 +176,14 @@ extension AppDelegate {
         }
     }
 
-    @objc func openSaveDir() {
+    func openSaveDir() {
         let dir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("KeyLens")
         NSWorkspace.shared.open(dir)
     }
 
-    @objc func quit() {
+    func quit() {
         NSApplication.shared.terminate(nil)
     }
 }

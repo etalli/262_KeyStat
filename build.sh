@@ -31,6 +31,7 @@ mkdir -p "$APP/Contents/Resources"
 
 cp .build/release/KeyLens "$APP/Contents/MacOS/"
 cp Resources/Info.plist "$APP/Contents/"
+cp images/AppIcon.png  "$APP/Contents/Resources/AppIcon.png"
 
 echo "$APP created"
 
