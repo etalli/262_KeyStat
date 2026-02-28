@@ -49,21 +49,7 @@ final class OverlayViewModel: ObservableObject {
     }
 
     static func symbol(for key: String) -> String {
-        let map: [String: String] = [
-            "Return":     "↵",
-            "Delete":     "⌫",
-            "Space":      "⎵",
-            "Tab":        "⇥",
-            "Escape":     "⎋",
-            "Enter(Num)": "↵",
-            "⌦FwdDel":   "⌦",
-            "⌘Cmd":      "⌘",
-            "⇧Shift":    "⇧",
-            "⌥Option":   "⌥",
-            "⌃Ctrl":     "⌃",
-            "CapsLock":   "⇪",
-        ]
-        return map[key] ?? key
+        KeyboardMonitor.symbolMap[key] ?? key
     }
 }
 

@@ -140,11 +140,13 @@ final class KeyCountStore {
         queue.sync { store.dailyCounts[todayKey]?.values.reduce(0, +) ?? 0 }
     }
 
-    private var todayKey: String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        return fmt.string(from: Date())
-    }
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private var todayKey: String { Self.dayFormatter.string(from: Date()) }
 
     /// カウント上位 limit 件を降順で返す
     func topKeys(limit: Int = 10) -> [(key: String, count: Int)] {

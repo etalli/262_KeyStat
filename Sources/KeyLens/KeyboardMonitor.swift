@@ -43,13 +43,14 @@ final class KeyboardMonitor {
         mask |= CGEventMask(1 << CGEventType.otherMouseDown.rawValue)
 
         // .listenOnly + .tailAppendEventTap = 最小権限での監視
+        // userInfo に self を渡すことで、コールバックが AppDelegate に依存せず tap を再有効化できる
         let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .tailAppendEventTap,
             options: .listenOnly,
             eventsOfInterest: mask,
             callback: inputTapCallback,
-            userInfo: nil
+            userInfo: Unmanaged.passUnretained(self).toOpaque()
         )
         KeyLens.log("CGEvent.tapCreate result: \(tap != nil ? "success" : "nil (FAILED)")")
         guard let tap else { return false }
@@ -97,27 +98,42 @@ final class KeyboardMonitor {
         return map[code] ?? "Key(\(code))"
     }
 
+    /// CGEventFlags から修飾キープレフィックス文字列を返す（macOS 慣例の ⌃⌥⇧⌘ 順）
+    static func modifierPrefix(for flags: CGEventFlags) -> String {
+        var prefix = ""
+        if flags.contains(.maskControl)   { prefix += "⌃" }
+        if flags.contains(.maskAlternate) { prefix += "⌥" }
+        if flags.contains(.maskShift)     { prefix += "⇧" }
+        if flags.contains(.maskCommand)   { prefix += "⌘" }
+        return prefix
+    }
+
+    /// キー名 → 表示シンボルの共通マップ（OverlayViewModel と共有）
+    static let symbolMap: [String: String] = [
+        "Return":     "↵",
+        "Delete":     "⌫",
+        "Space":      "⎵",
+        "Tab":        "⇥",
+        "Escape":     "⎋",
+        "Enter(Num)": "↵",
+        "⌦FwdDel":   "⌦",
+        "⌘Cmd":      "⌘",
+        "⇧Shift":    "⇧",
+        "⌥Option":   "⌥",
+        "⌃Ctrl":     "⌃",
+        "CapsLock":   "⇪",
+    ]
+
     /// オーバーレイ表示用: 修飾キーをプレフィックスとして結合した表示文字列を返す
     /// 例: Shift+A → "⇧A"、Cmd+C → "⌘C"、Cmd+Shift+Z → "⇧⌘Z"、Return → "Return"（変換はOverlayViewModelに委譲）
     static func overlayDisplayName(for event: CGEvent, keyName: String) -> String {
-        let flags = event.flags
-        var modPrefix = ""
-        var hasModifier = false
-        // macOS 慣例の順序: ⌃⌥⇧⌘
-        if flags.contains(.maskControl)   { modPrefix += "⌃"; hasModifier = true }
-        if flags.contains(.maskAlternate) { modPrefix += "⌥"; hasModifier = true }
-        if flags.contains(.maskShift)     { modPrefix += "⇧"; hasModifier = true }
-        if flags.contains(.maskCommand)   { modPrefix += "⌘"; hasModifier = true }
+        let modPrefix = modifierPrefix(for: event.flags)
 
-        guard hasModifier else { return keyName }  // 修飾なし: OverlayViewModelのsymbol()に委譲
+        guard !modPrefix.isEmpty else { return keyName }  // 修飾なし: OverlayViewModelのsymbol()に委譲
 
         // 修飾あり: 特殊キーをシンボルに変換し、文字キーを大文字にする
-        let specialMap: [String: String] = [
-            "Return": "↵", "Delete": "⌫", "Space": "⎵",
-            "Tab": "⇥", "Escape": "⎋", "Enter(Num)": "↵", "⌦FwdDel": "⌦",
-        ]
         let base: String
-        if let sym = specialMap[keyName] {
+        if let sym = symbolMap[keyName] {
             base = sym
         } else if keyName.count == 1, keyName.first?.isLetter == true {
             base = keyName.uppercased()
@@ -145,7 +161,8 @@ private func inputTapCallback(
     // タイムアウトで無効化された場合は即座に再有効化
     if type == .tapDisabledByTimeout {
         KeyLens.log("CGEventTap disabled by timeout — re-enabling")
-        if let tap = (NSApp.delegate as? AppDelegate)?.eventTap {
+        if let refcon,
+           let tap = Unmanaged<KeyboardMonitor>.fromOpaque(refcon).takeUnretainedValue().eventTap {
             CGEvent.tapEnable(tap: tap, enable: true)
         }
         return nil
@@ -186,11 +203,7 @@ private func inputTapCallback(
             // 修飾キー+キーの組み合わせを記録（⌃⌥⇧⌘ 順プレフィックス）
             let flags = event.flags.intersection([.maskControl, .maskAlternate, .maskShift, .maskCommand])
             if !flags.isEmpty {
-                var prefix = ""
-                if flags.contains(.maskControl)   { prefix += "⌃" }
-                if flags.contains(.maskAlternate) { prefix += "⌥" }
-                if flags.contains(.maskShift)     { prefix += "⇧" }
-                if flags.contains(.maskCommand)   { prefix += "⌘" }
+                let prefix = KeyboardMonitor.modifierPrefix(for: flags)
                 KeyCountStore.shared.incrementModified(key: "\(prefix)\(name)")
             }
 
