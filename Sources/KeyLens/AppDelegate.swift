@@ -1,7 +1,7 @@
 import AppKit
 import ServiceManagement
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSTextViewDelegate {
     private var statusItem: NSStatusItem!
     let monitor = KeyboardMonitor()
     private var permissionTimer: Timer?
@@ -370,7 +370,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showAboutPanel() {
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.orderFrontStandardAboutPanel(nil)
+        let l = L10n.shared
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+
+        let urlString = "https://github.com/etalli/262_KeyLens"
+        let para = NSMutableParagraphStyle()
+        para.alignment = .center
+        let attrString = NSMutableAttributedString(string: urlString)
+        attrString.addAttributes([
+            .link: urlString,
+            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+            .paragraphStyle: para
+        ], range: NSRange(location: 0, length: attrString.length))
+
+        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: 280, height: 18))
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.drawsBackground = false
+        textView.textStorage?.setAttributedString(attrString)
+        textView.delegate = self
+
+        let alert = NSAlert()
+        alert.messageText = "KeyLens \(version)"
+        alert.informativeText = ""
+        alert.accessoryView = textView
+        alert.addButton(withTitle: l.close)
+        alert.runModal()
+    }
+
+    func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
+        NSApp.stopModal()
+        if let url = link as? URL {
+            NSWorkspace.shared.open(url)
+        } else if let str = link as? String, let url = URL(string: str) {
+            NSWorkspace.shared.open(url)
+        }
+        return true
     }
 
     @objc private func openAccessibilitySettings() {

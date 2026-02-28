@@ -124,6 +124,10 @@ final class L10n {
         ja("KeyLens について", en: "About KeyLens")
     }
 
+    var close: String {
+        ja("閉じる", en: "Close")
+    }
+
     var languageMenuTitle: String {
         ja("言語", en: "Language")
     }
