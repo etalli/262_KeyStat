@@ -294,12 +294,18 @@ final class L10n {
         )
     }
 
+    static let dateFormatterJa: DateFormatter = {
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none
+        f.locale = Locale(identifier: "ja_JP"); return f
+    }()
+    private static let dateFormatterEn: DateFormatter = {
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none
+        f.locale = Locale(identifier: "en_US"); return f
+    }()
+
     /// 記録開始日を表示する文字列を返す
     func recordingSince(_ date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .none
-        fmt.locale = Locale(identifier: resolved == .japanese ? "ja_JP" : "en_US")
+        let fmt = resolved == .japanese ? Self.dateFormatterJa : Self.dateFormatterEn
         let dateStr = fmt.string(from: date)
         return ja("\(dateStr) から記録中", en: "Since \(dateStr)")
     }

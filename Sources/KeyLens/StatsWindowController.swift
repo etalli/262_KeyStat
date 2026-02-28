@@ -43,10 +43,7 @@ final class StatsWindowController: NSWindowController {
         entries = KeyCountStore.shared.allEntries()
         let store = KeyCountStore.shared
         let l = L10n.shared
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .none
-        fmt.locale = Locale(identifier: l.resolved == .japanese ? "ja_JP" : "en_US")
+        let fmt = l.resolved == .japanese ? L10n.dateFormatterJa : L10n.dateFormatterEn
         headerLabel.stringValue = l.statsWindowHeader(
             since: fmt.string(from: store.startedAt),
             today: store.todayCount.formatted(),
