@@ -145,3 +145,6 @@ tail -f ~/Library/Logs/KeyLens/app.log
 ---
 
 内部設計の詳細は [Architecture.md](docs/Architecture.md) を参照してください。
+
+
+フィードバック歓迎! バグ報告、機能要望、あるいは単純な質問など、何でも気軽に Issue を立ててください。あなたからの投稿をお待ちしています!!

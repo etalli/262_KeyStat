@@ -146,3 +146,7 @@ An alert is shown on first launch if the permission is missing.
 ---
 
 For internal design details, see [Architecture.md](docs/Architecture.md).
+
+
+Feedback Welcome!
+Feel free to open an issue for anything — bug reports, feature requests, or just a simple question. We’d love to hear from you!!
