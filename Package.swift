@@ -7,7 +7,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "KeyLens",
-            path: "Sources/KeyLens"
+            path: "Sources/KeyLens",
+            linkerSettings: [
+                .linkedFramework("IOKit")
+            ]
         )
     ]
 )

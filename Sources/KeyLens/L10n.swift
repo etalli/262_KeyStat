@@ -128,6 +128,18 @@ final class L10n {
         ja("閉じる", en: "Close")
     }
 
+    var heatmapLow: String {
+        ja("少", en: "Low")
+    }
+
+    var heatmapHigh: String {
+        ja("多", en: "High")
+    }
+
+    var heatmapMouse: String {
+        ja("マウス", en: "Mouse")
+    }
+
     var languageMenuTitle: String {
         ja("言語", en: "Language")
     }

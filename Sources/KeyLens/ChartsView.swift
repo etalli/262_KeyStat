@@ -47,6 +47,7 @@ struct ChartsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
+                chartSection("Keyboard Heatmap") { KeyboardHeatmapView(counts: model.keyCounts) }
                 chartSection("Top 20 Keys — All Time") { topKeysChart }
                 chartSection("Daily Totals") { dailyTotalsChart }
                 chartSection("Key Categories") { categoryChart }
