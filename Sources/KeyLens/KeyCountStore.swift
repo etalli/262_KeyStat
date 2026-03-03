@@ -44,6 +44,10 @@ private struct CountData: Codable {
     var dailyHighStrainBigramCount: [String: Int] // "yyyy-MM-dd" -> count
     var highStrainTrigramCount: Int               // cumulative high-strain trigrams
     var dailyHighStrainTrigramCount: [String: Int] // "yyyy-MM-dd" -> count
+    // General trigram frequency table (Issue #12) — key: "a→s→d", value: cumulative count
+    var trigramCounts: [String: Int]
+    // Daily trigram frequency — "yyyy-MM-dd" -> trigram -> count
+    var dailyTrigramCounts: [String: [String: Int]]
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
@@ -58,6 +62,7 @@ private struct CountData: Codable {
         case alternationRewardScore
         case highStrainBigramCount, dailyHighStrainBigramCount
         case highStrainTrigramCount, dailyHighStrainTrigramCount
+        case trigramCounts, dailyTrigramCounts
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
@@ -85,6 +90,8 @@ private struct CountData: Codable {
         self.dailyHighStrainBigramCount = [:]
         self.highStrainTrigramCount = 0
         self.dailyHighStrainTrigramCount = [:]
+        self.trigramCounts = [:]
+        self.dailyTrigramCounts = [:]
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -123,6 +130,9 @@ private struct CountData: Codable {
         dailyHighStrainBigramCount   = (try? c.decode([String: Int].self,  forKey: .dailyHighStrainBigramCount))   ?? [:]
         highStrainTrigramCount       = (try? c.decode(Int.self,            forKey: .highStrainTrigramCount))       ?? 0
         dailyHighStrainTrigramCount  = (try? c.decode([String: Int].self,  forKey: .dailyHighStrainTrigramCount))  ?? [:]
+        // Trigram counts: default to empty when reading old JSON (backward compatible)
+        trigramCounts      = (try? c.decode([String: Int].self,           forKey: .trigramCounts))      ?? [:]
+        dailyTrigramCounts = (try? c.decode([String: [String: Int]].self, forKey: .dailyTrigramCounts)) ?? [:]
     }
 }
 
@@ -141,6 +151,10 @@ final class KeyCountStore {
     // In-memory only: last key pressed, used for same-finger bigram detection.
     // Not persisted — bigram chains reset on app restart (acceptable for Phase 0).
     private var lastKeyName: String?
+
+    // In-memory only: second-to-last key pressed, used for trigram rolling window (Issue #12).
+    // Not persisted — trigram chain resets on app restart (same contract as lastKeyName).
+    private var secondLastKeyName: String?
 
     // In-memory only: whether the previous bigram was high-strain (Issue #28).
     // Used to detect consecutive high-strain bigrams (trigrams). Resets on app restart.
@@ -256,6 +270,23 @@ final class KeyCountStore {
                     }
                 }
                 lastBigramWasHighStrain = highStrain
+                // General trigram frequency (Issue #12) — 3-key rolling window.
+                // Only records when secondLastKeyName is available (3rd key onwards).
+                // 3キーのローリングウィンドウ。3キー目以降からトリグラムを記録する。
+                if let prev2 = secondLastKeyName {
+                    let trigram = "\(prev2)→\(prev)→\(key)"
+                    store.trigramCounts[trigram, default: 0] += 1
+                    store.dailyTrigramCounts[today, default: [:]][trigram, default: 0] += 1
+                }
+                // Advance window only when both keys are valid mapped keys.
+                // prev is already validated by the guard above.
+                // 両キーがマップ済みの場合のみウィンドウを前進する。
+                secondLastKeyName = prev
+            } else {
+                // Chain broken (unmapped key, mouse click) — reset trigram window to prevent
+                // stale prev2 from polluting a future trigram across an interruption.
+                // チェーン切断時はウィンドウをリセット。未マップキーをまたいだ誤トリグラムを防ぐ。
+                secondLastKeyName = nil
             }
             lastKeyName = key
 
@@ -486,6 +517,26 @@ final class KeyCountStore {
         }
     }
 
+    /// Top-N trigrams by cumulative frequency (Issue #12)
+    func topTrigrams(limit: Int = 20) -> [(pair: String, count: Int)] {
+        queue.sync {
+            store.trigramCounts.sorted { $0.value > $1.value }
+                               .prefix(limit)
+                               .map { ($0.key, $0.value) }
+        }
+    }
+
+    /// Top-N trigrams for today (Issue #12)
+    func todayTopTrigrams(limit: Int = 20) -> [(pair: String, count: Int)] {
+        let today = todayKey
+        return queue.sync {
+            (store.dailyTrigramCounts[today] ?? [:])
+                .sorted { $0.value > $1.value }
+                .prefix(limit)
+                .map { ($0.key, $0.value) }
+        }
+    }
+
     /// Returns the average IKI (ms) for a bigram, or nil if no samples exist.
     /// Use this to derive empirical distance factors for SameFingerPenalty calibration:
     ///   factor(tier) ≈ avgIKI(same-finger bigram in tier) / avgIKI(reference bigram)
@@ -593,6 +644,7 @@ final class KeyCountStore {
         queue.sync {
             store = CountData(startedAt: Date(), counts: [:], dailyCounts: [:])
             lastKeyName = nil
+            secondLastKeyName = nil
             alternationStreak = 0
             lastBigramWasHighStrain = false
             // CountData.init already zeros handAlternationCount / alternationRewardScore / highStrainCounts
