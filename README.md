@@ -81,7 +81,17 @@ Open via **Charts** in the menu. Sections (scroll down):
 
 ### Keystroke Overlay
 
-<img src="images/keystroke_overlay_settings.png" width="340"/>
+<table>
+  <tr>
+    <td><img src="images/keystroke_overlay_settings.png" width="280"/></td>
+    <td><img src="images/KeyStorokeOverlay-screenshot.png" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center">Setting</td>
+    <td align="center">Example</td>
+  </tr>
+</table>
+</div>
 
 Toggle via **Overlay** in the menu. Shows recent keystrokes in a floating window that fades after 3 seconds of inactivity. Position and size are configurable via the gear icon (⚙).
 
