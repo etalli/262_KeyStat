@@ -94,14 +94,7 @@ Use **Settings… > Open Log Folder** to open the directory in Finder. See [Arch
 
 ## Build from Source
 
-```bash
-./build.sh            # Build App Bundle only
-./build.sh --run      # Build and launch immediately
-./build.sh --install  # Build, install to /Applications, codesign, reset TCC, launch  ← recommended
-./build.sh --dmg      # Build distributable DMG
-```
-
-For build internals, test setup, and troubleshooting, see [Architecture — Build & Test](docs/Architecture.md#build--test).
+See [Architecture — Build & Test](docs/Architecture.md#build--test).
 
 ---
 
