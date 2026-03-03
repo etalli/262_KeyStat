@@ -343,11 +343,15 @@ Writes are debounced (2 s) and atomic (`.atomic` flag) to prevent corruption.
 | `dailyHandAlternationCount` | `{date: Int}` | Hand-alternating pairs per day |
 | `bigramCounts` | `{String: Int}` | Cumulative bigram frequency; key `"prev→cur"` |
 | `dailyBigramCounts` | `{date: {String: Int}}` | Per-day bigram frequency |
+| `bigramIKISum` | `{String: Double}` | Per-bigram cumulative IKI sum (ms); used for same-finger penalty calibration |
+| `bigramIKICount` | `{String: Int}` | Per-bigram IKI sample count |
+| `trigramCounts` | `{String: Int}` | Cumulative trigram frequency; key `"a→s→d"` |
+| `dailyTrigramCounts` | `{date: {String: Int}}` | Per-day trigram frequency |
 | `highStrainBigramCount` | `Int` | Cumulative high-strain (same-finger, ≥1-row span) bigram count |
 | `dailyHighStrainBigramCount` | `{date: Int}` | High-strain bigram count per day |
-| `alternationRewardScore` | `Double` | Running alternation reward score |
-| `thumbImbalanceRatio` | `Double` | Left/right thumb imbalance ratio |
-| `thumbEfficiencyCoefficient` | `Double` | Thumb key efficiency coefficient |
+| `highStrainTrigramCount` | `Int` | Cumulative count of two consecutive high-strain bigrams |
+| `dailyHighStrainTrigramCount` | `{date: Int}` | High-strain trigram count per day |
+| `alternationRewardScore` | `Double` | Running alternation reward score (includes streak multiplier bonus) |
 
 All fields except `startedAt` and `counts` use optional decoding with safe defaults,
 ensuring forward/backward compatibility when new fields are added.
