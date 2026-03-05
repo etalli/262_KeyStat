@@ -159,16 +159,22 @@ final class TravelDistanceEstimatorTests: XCTestCase {
     // MARK: - 12. ErgonomicSnapshot.capture
 
     func test_ergonomicSnapshot_capture_matchesTotalTravel() {
-        let counts   = ["f→g": 200, "a→l": 50]
-        let expected = estimator.totalTravel(counts: counts, layout: layout)
-        let snapshot = ErgonomicSnapshot.capture(counts: counts, layout: layout)
+        // bigramCounts only (no thumb keys in test data → keyCounts can be empty).
+        // テストデータに親指キーが含まれないため keyCounts は空で問題ない。
+        let bigramCounts = ["f→g": 200, "a→l": 50]
+        let expected = estimator.totalTravel(counts: bigramCounts, layout: layout)
+        let snapshot = ErgonomicSnapshot.capture(
+            bigramCounts: bigramCounts,
+            keyCounts:    [:],
+            layout:       LayoutRegistry.shared
+        )
         XCTAssertEqual(snapshot.estimatedTravelDistance, expected, accuracy: 1e-10)
     }
 
     func test_ergonomicSnapshot_equatable() {
-        let counts = ["f→g": 100]
-        let s1 = ErgonomicSnapshot.capture(counts: counts, layout: layout)
-        let s2 = ErgonomicSnapshot.capture(counts: counts, layout: layout)
+        let bigramCounts = ["f→g": 100]
+        let s1 = ErgonomicSnapshot.capture(bigramCounts: bigramCounts, keyCounts: [:], layout: LayoutRegistry.shared)
+        let s2 = ErgonomicSnapshot.capture(bigramCounts: bigramCounts, keyCounts: [:], layout: LayoutRegistry.shared)
         XCTAssertEqual(s1, s2)
     }
 }

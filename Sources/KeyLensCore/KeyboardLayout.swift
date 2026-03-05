@@ -471,5 +471,43 @@ public final class LayoutRegistry {
     /// 有効な高負荷シーケンス検出器。デフォルトは最小ティア .oneRow。
     public var highStrainDetector: HighStrainDetector = .default
 
-    private init() {}
+    /// Active ergonomic score engine. Defaults to Issue #29 weights and thumbEfficiencyMax=2.0.
+    /// 有効なエルゴノミクススコアエンジン。デフォルトは Issue #29 重みテーブル。
+    public var ergonomicScoreEngine: ErgonomicScoreEngine = .default
+
+    /// Internal designated initialiser. Use `LayoutRegistry.shared` for the global singleton
+    /// or `LayoutRegistry.forSimulation(layout:base:)` for isolated evaluation contexts.
+    /// シングルトンは `.shared`、シミュレーション用は `forSimulation` を使うこと。
+    init() {}
+
+    // MARK: - Simulation factory
+
+    /// Creates an isolated LayoutRegistry configured for layout simulation or testing.
+    ///
+    /// The returned registry inherits all configuration from `base` but uses the given
+    /// `layout` as its active layout. The global singleton is not modified.
+    ///
+    /// ```swift
+    /// let remapped = KeyRelocationSimulator.layout(applying: map, over: ANSILayout())
+    /// let simReg   = LayoutRegistry.forSimulation(layout: remapped)
+    /// let snapshot = ErgonomicSnapshot.capture(bigramCounts: ..., keyCounts: ..., layout: simReg)
+    /// ```
+    ///
+    /// グローバルシングルトンを変更せず、シミュレーション用の独立したレジストリを返す。
+    public static func forSimulation(
+        layout: any KeyboardLayout,
+        base:   LayoutRegistry = .shared
+    ) -> LayoutRegistry {
+        let reg = LayoutRegistry()
+        reg.current                   = layout
+        reg.splitConfig               = base.splitConfig
+        reg.fingerLoadWeight          = base.fingerLoadWeight
+        reg.sameFingerPenaltyModel    = base.sameFingerPenaltyModel
+        reg.alternationRewardModel    = base.alternationRewardModel
+        reg.thumbImbalanceDetector    = base.thumbImbalanceDetector
+        reg.thumbEfficiencyCalculator = base.thumbEfficiencyCalculator
+        reg.highStrainDetector        = base.highStrainDetector
+        reg.ergonomicScoreEngine      = base.ergonomicScoreEngine
+        return reg
+    }
 }
