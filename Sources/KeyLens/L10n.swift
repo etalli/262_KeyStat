@@ -338,6 +338,27 @@ final class L10n {
         )
     }
 
+    var helpActivityCalendar: String {
+        ja(
+            "過去365日の日別打鍵数をカレンダーヒートマップで表示します。セルが濃いほど打鍵数が多い日です。",
+            en: "Calendar heatmap of daily keystroke counts over the past year. Darker cells indicate more keystrokes."
+        )
+    }
+
+    var helpHourlyDistribution: String {
+        ja(
+            "全記録セッションを通じた、時刻（0〜23時）ごとの累積打鍵数を表示します。",
+            en: "Total keystrokes by hour of day across all recorded sessions."
+        )
+    }
+
+    var helpLayoutComparison: String {
+        ja(
+            "実際の打鍵データを用いて、現行レイアウトとSFB最適化提案レイアウトを人間工学スコアで比較します。",
+            en: "Compares your current layout against an SFB-optimised layout using your actual typing data."
+        )
+    }
+
     var helpBigrams: String {
         ja(
             "ビグラムとは、連続する2回の打鍵のペアです。グラフは最も頻度の高い20ペアを表示します。\n\n同指率：同じ指で連続して打鍵されるペアの割合。低いほど人間工学的に優れています。同指連打は生体力学的に最も負荷が高い動作です。\n\n交互打鍵率：左右の手が交互に打鍵するペアの割合。高いほど優れています。交互打鍵は速度と持久性を同時に高めます。",

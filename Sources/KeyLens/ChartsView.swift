@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import KeyLensCore
 
 // MARK: - Chart data types
 
@@ -44,6 +45,26 @@ struct BigramEntry: Identifiable {
     let pair: String
     let count: Int
     init(_ t: (pair: String, count: Int)) { id = t.pair; pair = t.pair; count = t.count }
+}
+
+// Issue #5: Hourly distribution entry (for Chart)
+// 時間帯別打鍵数チャート用エントリ
+struct HourEntry: Identifiable {
+    let id: Int
+    let hour: Int
+    let count: Int
+    var hourLabel: String { String(format: "%02d:00", hour) }
+    var isWorkHour: Bool { hour >= 9 && hour < 18 }
+    init(hour: Int, count: Int) { id = hour; self.hour = hour; self.count = count }
+}
+
+// Issue #5: Monthly total entry
+// 月別打鍵数合計エントリ
+struct MonthlyTotalEntry: Identifiable {
+    let id: String
+    let month: String
+    let total: Int
+    init(_ t: (month: String, total: Int)) { id = t.month; month = t.month; total = t.total }
 }
 
 // MARK: - Phase 3 data types
@@ -107,6 +128,10 @@ struct ChartsView: View {
                 chartSection("Top 20 Keys — All Time") { topKeysChart }
                 chartSection("Top 20 Bigrams", helpText: L10n.shared.helpBigrams) { bigramChart }
                 chartSection("Daily Totals") { dailyTotalsChart }
+                chartSection("Activity Calendar", helpText: L10n.shared.helpActivityCalendar) { activityCalendarChart }
+                chartSection("Hourly Distribution", helpText: L10n.shared.helpHourlyDistribution) { hourlyDistributionChart }
+                chartSection("Monthly Totals") { monthlyTotalsChart }
+                chartSection("Layout Comparison", helpText: L10n.shared.helpLayoutComparison) { layoutComparisonSection }
                 chartSection("Ergonomic Learning Curve", helpText: L10n.shared.helpLearningCurve) { learningCurveChart }
                 chartSection("Weekly Report") { weeklyDeltaSection }
                 chartSection("Key Categories") { categoryChart }
@@ -456,6 +481,150 @@ struct ChartsView: View {
         }
     }
 
+    // MARK: - Phase 2: Layout Comparison (Before/After)
+
+    @ViewBuilder
+    private var layoutComparisonSection: some View {
+        if let cmp = model.layoutComparison {
+            VStack(alignment: .leading, spacing: 12) {
+                // Recommended swaps header
+                // 推奨スワップのヘッダー
+                let swapLabels = cmp.recommendedSwaps
+                    .map { "\($0.from) ↔ \($0.to)" }
+                    .joined(separator: ", ")
+                Text("Recommended swaps: \(swapLabels)")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                // Comparison Grid table
+                // 比較グリッドテーブル
+                Grid(alignment: .trailing, horizontalSpacing: 20, verticalSpacing: 0) {
+                    // Header row
+                    GridRow {
+                        Text("Metric")
+                            .font(.caption).bold().foregroundStyle(.secondary)
+                            .gridColumnAlignment(.leading)
+                        Text("Current")
+                            .font(.caption).bold().foregroundStyle(.secondary)
+                        Text("Proposed")
+                            .font(.caption).bold().foregroundStyle(.secondary)
+                        Text("Change")
+                            .font(.caption).bold().foregroundStyle(.secondary)
+                    }
+                    .padding(.bottom, 6)
+
+                    Divider().gridCellUnsizedAxes(.horizontal)
+
+                    // Ergonomic score (higher is better)
+                    comparisonRow(
+                        metric: "Ergonomic score",
+                        current:  String(format: "%.1f", cmp.current.ergonomicScore),
+                        proposed: String(format: "%.1f", cmp.proposed.ergonomicScore),
+                        delta: cmp.ergonomicScoreDelta,
+                        positiveIsBetter: true,
+                        format: { d in String(format: "%+.1f", d) }
+                    )
+
+                    // Same-finger rate (lower is better)
+                    comparisonRow(
+                        metric: "Same-finger rate",
+                        current:  pct(cmp.current.sameFingerRate),
+                        proposed: pct(cmp.proposed.sameFingerRate),
+                        delta: cmp.sameFingerRateDelta,
+                        positiveIsBetter: true,
+                        format: { d in pp(d) }
+                    )
+
+                    // Hand alternation rate (higher is better)
+                    comparisonRow(
+                        metric: "Hand alternation",
+                        current:  pct(cmp.current.handAlternationRate),
+                        proposed: pct(cmp.proposed.handAlternationRate),
+                        delta: cmp.handAlternationDelta,
+                        positiveIsBetter: true,
+                        format: { d in pp(d) }
+                    )
+
+                    // High-strain rate (lower is better)
+                    comparisonRow(
+                        metric: "High-strain rate",
+                        current:  pct(cmp.current.highStrainRate),
+                        proposed: pct(cmp.proposed.highStrainRate),
+                        delta: cmp.highStrainRateDelta,
+                        positiveIsBetter: true,
+                        format: { d in pp(d) }
+                    )
+
+                    // Thumb imbalance (lower is better)
+                    comparisonRow(
+                        metric: "Thumb imbalance",
+                        current:  String(format: "%.2f", cmp.current.thumbImbalanceRatio),
+                        proposed: String(format: "%.2f", cmp.proposed.thumbImbalanceRatio),
+                        delta: cmp.thumbImbalanceDelta,
+                        positiveIsBetter: true,
+                        format: { d in String(format: "%+.2f", d) }
+                    )
+
+                    // Finger travel (lower is better)
+                    comparisonRow(
+                        metric: "Finger travel",
+                        current:  String(format: "%.0f", cmp.current.estimatedTravelDistance),
+                        proposed: String(format: "%.0f", cmp.proposed.estimatedTravelDistance),
+                        delta: cmp.travelDistanceDelta,
+                        positiveIsBetter: true,
+                        format: { d in String(format: "%+.0f", d) }
+                    )
+                }
+                .padding(.vertical, 8)
+            }
+        } else {
+            Text("Need more typing data to compute layout comparison")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, minHeight: 60, alignment: .center)
+        }
+    }
+
+    /// Renders one row of the comparison table with colour-coded change column.
+    /// 比較テーブルの1行を色付きの変化列と共にレンダリングする。
+    @ViewBuilder
+    private func comparisonRow(
+        metric: String,
+        current: String,
+        proposed: String,
+        delta: Double,
+        positiveIsBetter: Bool,
+        format: (Double) -> String
+    ) -> some View {
+        let threshold = 0.001
+        let isImprovement = positiveIsBetter ? delta > threshold  : delta < -threshold
+        let isRegression  = positiveIsBetter ? delta < -threshold : delta > threshold
+        let color: Color  = isImprovement ? .green : (isRegression ? .red : .secondary)
+        let arrow: String = delta > threshold ? "↑" : (delta < -threshold ? "↓" : "→")
+
+        GridRow {
+            Text(metric)
+                .font(.callout)
+                .gridColumnAlignment(.leading)
+            Text(current)
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.secondary)
+            Text(proposed)
+                .font(.callout.monospacedDigit())
+            Text("\(arrow) \(format(delta))")
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(color)
+        }
+        .padding(.vertical, 5)
+    }
+
+    /// Formats a rate as a percentage string (e.g. 0.083 → "8.3%").
+    /// 比率をパーセント文字列に変換する。
+    private func pct(_ rate: Double) -> String { String(format: "%.1f%%", rate * 100) }
+
+    /// Formats a rate delta as percentage points (e.g. 0.042 → "+4.2pp").
+    /// 比率差をパーセントポイント表記に変換する。
+    private func pp(_ delta: Double) -> String { String(format: "%+.1fpp", delta * 100) }
+
     // MARK: - Phase 3: Learning Curve (daily ergonomic trend)
 
     @ViewBuilder
@@ -586,11 +755,246 @@ struct ChartsView: View {
             .foregroundStyle(color)
     }
 
+    // MARK: - Issue #5: Activity Calendar (heatmap)
+
+    /// Calendar heatmap showing daily keystroke counts for the past 365 days.
+    /// 過去365日の日別打鍵数をカレンダーヒートマップで表示する。
+    @ViewBuilder
+    private var activityCalendarChart: some View {
+        if model.dailyTotals.isEmpty {
+            emptyState
+        } else {
+            ActivityCalendarView(dailyTotals: model.dailyTotals)
+        }
+    }
+
+    // MARK: - Issue #5: Hourly Distribution (bar chart)
+
+    /// 24-bar chart showing aggregate keystroke count by hour of day.
+    /// 時刻（0〜23時）別の累積打鍵数棒グラフ。
+    @ViewBuilder
+    private var hourlyDistributionChart: some View {
+        let dist = model.hourlyDistribution
+        if dist.isEmpty || dist.allSatisfy({ $0 == 0 }) {
+            emptyState
+        } else {
+            let entries = dist.enumerated().map { HourEntry(hour: $0.offset, count: $0.element) }
+            Chart(entries) { item in
+                BarMark(
+                    x: .value("Hour", item.hourLabel),
+                    y: .value("Count", item.count)
+                )
+                .foregroundStyle(item.isWorkHour ? Color.blue.opacity(0.75) : Color.blue.opacity(0.35))
+                .cornerRadius(2)
+            }
+            .chartXAxis {
+                AxisMarks(values: [0, 6, 12, 18, 23].map { String(format: "%02d:00", $0) }) { value in
+                    AxisValueLabel { Text(value.as(String.self) ?? "") }
+                    AxisGridLine()
+                }
+            }
+            .frame(height: 160)
+        }
+    }
+
+    // MARK: - Issue #5: Monthly Totals (bar chart)
+
+    /// Bar chart of total keystrokes per calendar month (last 12 months).
+    /// 月別打鍵数合計の棒グラフ（直近12ヶ月）。
+    @ViewBuilder
+    private var monthlyTotalsChart: some View {
+        let entries = Array(model.monthlyTotals.suffix(12))
+        if entries.isEmpty {
+            emptyState
+        } else {
+            Chart(entries) { item in
+                BarMark(
+                    x: .value("Month", item.month),
+                    y: .value("Total", item.total)
+                )
+                .foregroundStyle(.teal.opacity(0.75))
+                .cornerRadius(4)
+                .annotation(position: .top, spacing: 3) {
+                    Text(item.total.formatted(.number.notation(.compactName)))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartXAxis {
+                AxisMarks { value in
+                    AxisValueLabel {
+                        if let s = value.as(String.self) {
+                            // "yyyy-MM" → show "yy/MM" for compactness
+                            // 表示例: "2024-03" → "24/03"
+                            let parts = s.split(separator: "-")
+                            let label = parts.count == 2
+                                ? "\(String(parts[0]).suffix(2))/\(parts[1])"
+                                : s
+                            Text(label)
+                                .font(.caption2)
+                        }
+                    }
+                }
+            }
+            .frame(height: 180)
+        }
+    }
+
     // MARK: - Empty state
 
     private var emptyState: some View {
         Text("(no data yet)")
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, minHeight: 80, alignment: .center)
+    }
+}
+
+// MARK: - ActivityCalendarView (Issue #5)
+
+/// Contribution calendar heatmap showing daily keystroke counts.
+/// Displays the past 365 days as a 53-column × 7-row grid, coloured by keystroke intensity.
+///
+/// カレンダーヒートマップ：日別打鍵数を色の濃淡で表現する。
+/// 過去365日を53列 × 7行グリッドで表示し、打鍵数の強度に応じて色付けする。
+struct ActivityCalendarView: View {
+    let dailyTotals: [DailyTotalEntry]
+
+    // Calendar cell size and spacing
+    // カレンダーセルのサイズとスペーシング
+    private let cellSize: CGFloat = 12
+    private let spacing: CGFloat  = 2
+
+    // Build a lookup from date string → total count
+    // 日付文字列 → 合計打鍵数のルックアップを構築する
+    private var countMap: [String: Int] {
+        Dictionary(uniqueKeysWithValues: dailyTotals.map { ($0.date, $0.total) })
+    }
+
+    // The maximum daily count (used to normalise intensity levels)
+    // 強度正規化に使用する1日の最大打鍵数
+    private var maxCount: Int {
+        dailyTotals.map(\.total).max() ?? 1
+    }
+
+    // Build an ordered list of (dateString, count) for the past 365 days,
+    // padded at the start so the first cell falls on a Sunday.
+    // 過去365日の (日付文字列, 打鍵数) リストを構築し、先頭を日曜に揃える。
+    private var calendarDays: [(date: String, count: Int)] {
+        let cal     = Calendar.current
+        let fmt     = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        let today   = Date()
+
+        // 365 actual days ending today
+        // 今日を含む過去365日
+        let actualDays: [Date] = (0..<365).compactMap {
+            cal.date(byAdding: .day, value: -$0, to: today)
+        }.reversed()
+
+        let firstDay   = actualDays.first ?? today
+        let weekday    = cal.component(.weekday, from: firstDay)  // 1=Sun
+        let leadingPad = weekday - 1                              // 0-based offset to Sunday
+
+        var days: [(date: String, count: Int)] = []
+        // Pad leading empty slots so the grid starts on Sunday
+        // グリッドを日曜始まりにするための空スロットを先頭に追加
+        for _ in 0..<leadingPad {
+            days.append((date: "", count: 0))
+        }
+        let map = countMap
+        for d in actualDays {
+            let key = fmt.string(from: d)
+            days.append((date: key, count: map[key] ?? 0))
+        }
+        return days
+    }
+
+    var body: some View {
+        let days   = calendarDays
+        let max    = maxCount
+        let cols   = Int(ceil(Double(days.count) / 7.0))
+
+        VStack(alignment: .leading, spacing: 6) {
+            // Day-of-week labels (Sun … Sat)
+            // 曜日ラベル（Sun〜Sat）
+            HStack(spacing: 0) {
+                // Indent to match grid columns offset — no leading label column here
+                // グリッドに合わせた先頭スペース
+                Spacer().frame(width: 0)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: spacing) {
+                    // DOW header column (Sun → Sat labels on left side)
+                    // 曜日ヘッダー列（左側）
+                    VStack(alignment: .trailing, spacing: spacing) {
+                        ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { label in
+                            Text(label)
+                                .font(.system(size: 9, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .frame(width: cellSize, height: cellSize)
+                        }
+                    }
+
+                    // Week columns
+                    // 週ごとの列
+                    ForEach(0..<cols, id: \.self) { col in
+                        VStack(spacing: spacing) {
+                            ForEach(0..<7, id: \.self) { row in
+                                let idx = col * 7 + row
+                                if idx < days.count && !days[idx].date.isEmpty {
+                                    let day = days[idx]
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(intensityColor(count: day.count, max: max))
+                                        .frame(width: cellSize, height: cellSize)
+                                        .help("\(day.date): \(day.count.formatted()) keystrokes")
+                                } else {
+                                    // Empty padding slot or out-of-range
+                                    // 空スロット
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(Color.clear)
+                                        .frame(width: cellSize, height: cellSize)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 4)
+            }
+
+            // Intensity legend
+            // 強度凡例
+            HStack(spacing: 6) {
+                Text("Less").font(.caption2).foregroundStyle(.secondary)
+                ForEach(0..<5, id: \.self) { level in
+                    let frac = level == 0 ? 0.0 : Double(level) / 4.0
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(intensityColor(fraction: frac))
+                        .frame(width: cellSize, height: cellSize)
+                }
+                Text("More").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Returns a colour for a given count relative to the maximum.
+    /// 最大値を基準に打鍵数に対応する色を返す。
+    private func intensityColor(count: Int, max: Int) -> Color {
+        let fraction = max > 0 ? Double(count) / Double(max) : 0.0
+        return intensityColor(fraction: fraction)
+    }
+
+    /// Maps a normalised fraction [0,1] to a green-tinted intensity colour.
+    /// 正規化された割合 [0,1] を緑系の強度色にマッピングする。
+    private func intensityColor(fraction: Double) -> Color {
+        if fraction == 0 { return Color(NSColor.controlBackgroundColor).opacity(0.6) }
+        // 4-level green scale: light → dark
+        // 4段階の緑スケール：薄い → 濃い
+        switch fraction {
+        case 0..<0.25: return Color.green.opacity(0.25)
+        case 0.25..<0.50: return Color.green.opacity(0.50)
+        case 0.50..<0.75: return Color.green.opacity(0.75)
+        default:          return Color.green.opacity(1.00)
+        }
     }
 }

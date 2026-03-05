@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import KeyLensCore
 
 // MARK: - ChartDataModel
 
@@ -20,6 +21,11 @@ final class ChartDataModel: ObservableObject {
     // Phase 3
     @Published var dailyErgonomics:      [DailyErgonomicEntry]  = []
     @Published var weeklyDeltas:         [WeeklyDeltaRow]       = []
+    // Phase 2: Before/After layout comparison (Issue #3)
+    @Published var layoutComparison:     LayoutComparison?      = nil
+    // Issue #5: Activity Trends
+    @Published var hourlyDistribution:   [Int]                  = []
+    @Published var monthlyTotals:        [MonthlyTotalEntry]    = []
 
     func reload() {
         let store            = KeyCountStore.shared
@@ -49,6 +55,18 @@ final class ChartDataModel: ObservableObject {
 
         // Phase 3: Weekly Delta (this 7 days vs. previous 7 days)
         weeklyDeltas = Self.computeWeeklyDeltas(ergRates: ergRates, rawDailyTotals: rawDailyTotals)
+
+        // Phase 2: Before/After layout comparison — runs SameFingerOptimizer synchronously.
+        // Typical datasets complete in <1 ms; no background thread needed.
+        // SameFingerOptimizer を同期実行。通常は 1ms 未満で完了するためメインスレッドで問題ない。
+        layoutComparison = LayoutComparison.make(
+            bigramCounts: store.allBigramCounts,
+            keyCounts:    store.allKeyCounts
+        )
+
+        // Issue #5: Activity Trends
+        hourlyDistribution = store.hourlyDistribution()
+        monthlyTotals      = store.monthlyTotals().map(MonthlyTotalEntry.init)
     }
 
     // Compare the most recent 7 days against the 7 days before that.

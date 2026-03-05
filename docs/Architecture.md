@@ -65,8 +65,11 @@ graph TD
 │       ├── HighStrainDetector.swift
 │       ├── LayoutConstraints.swift       # Phase 2: fixed-key constraints (#39)
 │       ├── RemappedLayout.swift          # Phase 2: key-swap simulation (#38)
-│       ├── SFBScoreEngine.swift          # Phase 2: SFB penalty scorer (#29)
-│       └── SameFingerOptimizer.swift     # Phase 2: greedy hill-climb optimizer (#41)
+│       ├── SFBScoreEngine.swift          # Phase 2: SFB penalty scorer
+│       ├── SameFingerOptimizer.swift     # Phase 2: greedy hill-climb optimizer (#41)
+│       ├── ErgonomicScoreEngine.swift    # Phase 1: unified ergonomic score formula (#29)
+│       ├── ErgonomicSnapshot.swift       # Phase 2: all-metric snapshot for one layout (#3, #40)
+│       └── LayoutComparison.swift        # Phase 2: before/after layout comparison (#3)
 └── Tests/
     └── KeyLensTests/
         ├── KeyboardLayoutTests.swift
@@ -78,7 +81,9 @@ graph TD
         ├── ThumbEfficiencyCalculatorTests.swift
         ├── HighStrainDetectorTests.swift
         ├── TrigramCountsTests.swift
-        └── SameFingerOptimizerTests.swift
+        ├── SameFingerOptimizerTests.swift
+        ├── ErgonomicScoreEngineTests.swift
+        └── LayoutComparisonTests.swift
 ```
 
 ---
@@ -329,6 +334,10 @@ A separate Swift library target that exposes keyboard ergonomic abstractions dec
 | `SFBScoreEngine` | `SFBScoreEngine.swift` | Computes `Σ(count × penalty)` for same-hand/same-finger bigrams; used by optimizer for scoring candidate layouts |
 | `KeySwap` | `SameFingerOptimizer.swift` | Value type: `(from, to, projectedSFBReduction)` |
 | `SameFingerOptimizer` | `SameFingerOptimizer.swift` | Greedy hill-climb: identifies top-K SFB bigrams, tries all (candidate, swappable) swaps, accepts the best per iteration; respects `LayoutConstraints` |
+| `ErgonomicScoreEngine` | `ErgonomicScoreEngine.swift` | Combines 5 Phase 1 metrics into a single [0,100] ergonomic score; configurable weight table (`ErgonomicScoreWeights`) |
+| `ErgonomicSnapshot` | `ErgonomicSnapshot.swift` | Immutable value type holding all 7 sub-metrics for one (layout, dataset) pair; `capture(bigramCounts:keyCounts:layout:)` computes all fields in a single bigram scan |
+| `LayoutComparison` | `LayoutComparison.swift` | Side-by-side ergonomic comparison: holds `current` + `proposed` snapshots + `recommendedSwaps`; `make(bigramCounts:keyCounts:)` runs `SameFingerOptimizer`, builds `RemappedLayout`, and computes both snapshots |
+| `LayoutRegistry.forSimulation` | `KeyboardLayout.swift` | Factory that creates an isolated `LayoutRegistry` with a given layout and configuration copied from a base registry, without modifying the global singleton |
 
 ---
 
