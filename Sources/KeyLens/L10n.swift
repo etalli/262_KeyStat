@@ -60,7 +60,7 @@ final class L10n {
     }
 
     var monitoringActive: String {
-        ja("● 監視中", en: "● Monitoring")
+        ja("● 記録中", en: "● Recording")
     }
 
     var monitoringStopped: String {
