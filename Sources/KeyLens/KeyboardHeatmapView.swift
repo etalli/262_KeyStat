@@ -38,6 +38,10 @@ struct KeyboardHeatmapView: View {
     @State private var showModeHelp: Bool = false
     @State private var showStrainLegendHelp: Bool = false
     @AppStorage("heatmapTemplate") private var template: HeatmapTemplate = .ansi
+    @Environment(\.colorScheme) private var colorScheme
+
+    // Adapts to dark / light mode — dark: near-black, light: near-white
+    private var emptyKeyColor: Color { colorScheme == .dark ? Color(white: 0.25) : Color(white: 0.85) }
 
     private let keyHeight: CGFloat = 40
     private let keySpacing: CGFloat = 4
@@ -339,6 +343,10 @@ struct HeatmapExportView: View {
     let keyboardKeyNames: Set<String>
     let strainScores: [String: Int]
 
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var emptyKeyColor: Color { colorScheme == .dark ? Color(white: 0.25) : Color(white: 0.85) }
+
     private let keyHeight: CGFloat = 40
     private let keySpacing: CGFloat = 4
 
@@ -449,8 +457,8 @@ struct HeatmapExportView: View {
     private func heatCell(label: String, count: Int, max: Int, width: CGFloat) -> some View {
         let t = max > 0 && count > 0 ? Double(count) / Double(max) : 0
         let hue = (1.0 - t) * 0.67
-        let bgColor = count > 0 ? Color(hue: hue, saturation: 0.75, brightness: 0.82) : Color(white: 0.25)
-        let fgColor: Color = count > 0 ? .white : Color(white: 0.5)
+        let bgColor = count > 0 ? Color(hue: hue, saturation: 0.75, brightness: 0.82) : emptyKeyColor
+        let fgColor: Color = count > 0 ? .white : .secondary
 
         return ZStack {
             RoundedRectangle(cornerRadius: 5).fill(bgColor)
@@ -473,7 +481,7 @@ struct HeatmapExportView: View {
             Text(lowLabel).font(.caption2).foregroundStyle(.secondary)
             LinearGradient(
                 stops: [
-                    .init(color: Color(white: 0.25), location: 0.00),
+                    .init(color: emptyKeyColor, location: 0.00),
                     .init(color: Color(hue: 0.67, saturation: 0.75, brightness: 0.82), location: 0.15),
                     .init(color: Color(hue: 0.40, saturation: 0.75, brightness: 0.82), location: 0.45),
                     .init(color: Color(hue: 0.15, saturation: 0.75, brightness: 0.82), location: 0.75),
