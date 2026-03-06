@@ -1,20 +1,6 @@
 import AppKit
 import ServiceManagement
 
-// MARK: - NSTextViewDelegate
-
-extension AppDelegate: NSTextViewDelegate {
-    func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
-        NSApp.stopModal()
-        if let url = link as? URL {
-            NSWorkspace.shared.open(url)
-        } else if let str = link as? String, let url = URL(string: str) {
-            NSWorkspace.shared.open(url)
-        }
-        return true
-    }
-}
-
 // MARK: - Actions
 
 extension AppDelegate {
@@ -103,37 +89,7 @@ extension AppDelegate {
     }
 
     func showAboutPanel() {
-        NSApp.activate(ignoringOtherApps: true)
-        let l = L10n.shared
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-
-        let urlString = "https://github.com/etalli/262_KeyLens"
-        let para = NSMutableParagraphStyle()
-        para.alignment = .center
-        let attrString = NSMutableAttributedString(string: urlString)
-        attrString.addAttributes([
-            .link: urlString,
-            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
-            .paragraphStyle: para
-        ], range: NSRange(location: 0, length: attrString.length))
-
-        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: 280, height: 18))
-        textView.isEditable = false
-        textView.isSelectable = true
-        textView.drawsBackground = false
-        textView.textStorage?.setAttributedString(attrString)
-        textView.delegate = self
-
-        let alert = NSAlert()
-        alert.messageText = "KeyLens \(version)"
-        alert.informativeText = ""
-        if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
-           let icon = NSImage(contentsOf: iconURL) {
-            alert.icon = icon
-        }
-        alert.accessoryView = textView
-        alert.addButton(withTitle: l.close)
-        alert.runModal()
+        AboutWindowController.shared.show()
     }
 
     func openAccessibilitySettings() {

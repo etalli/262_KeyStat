@@ -72,12 +72,9 @@ struct MenuView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
 
-            // Avg / Min
+            // Avg interval
             if let avgMs = store.averageIntervalMs {
                 infoRow(String(format: l.avgIntervalFormat, avgMs))
-            }
-            if let minMs = store.todayMinIntervalMs {
-                infoRow(String(format: l.minIntervalFormat, minMs))
             }
 
             // Top 3 バッジ
@@ -130,10 +127,6 @@ struct MenuView: View {
             Divider().padding(.horizontal, 14).padding(.vertical, 2)
             // データ操作サブメニュー
             DataMenuRow()
-            // クリップボードへコピー（コピー後 1.5s だけ ✓ 表示）
-            menuRow(appDelegate.copyConfirmed ? "\(L10n.shared.copyDataMenuItem) - \(L10n.shared.copiedConfirmation)" : L10n.shared.copyDataMenuItem) {
-                appDelegate.copyDataToClipboard()
-            }
             // 設定サブメニュー（Launch at Login・言語・通知間隔・リセット）
             SettingsMenuRow()
         }
@@ -299,6 +292,9 @@ private struct DataMenuRow: View {
 
         add(l.exportCSVMenuItem)       { appDelegate.exportCSV() }
         add(l.editPromptMenuItem)      { appDelegate.editAIPrompt() }
+        add(appDelegate.copyConfirmed ? "\(l.copyDataMenuItem) - \(l.copiedConfirmation)" : l.copyDataMenuItem) {
+            appDelegate.copyDataToClipboard()
+        }
         menu.addItem(.separator())
         add(l.openSaveFolder)          { appDelegate.openSaveDir() }
 
