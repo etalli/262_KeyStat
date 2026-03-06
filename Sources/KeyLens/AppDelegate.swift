@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import KeyLensCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var isMonitoring = false
@@ -13,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         _ = KeystrokeOverlayController.shared
 
         startMonitor()
+        detectHardware()
         setupHealthCheck()
 
         NotificationCenter.default.addObserver(
@@ -92,5 +94,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         task.arguments = [bundleURL.path]
         try? task.run()
         NSApp.terminate(nil)
+    }
+
+    private func detectHardware() {
+        let names = KeyboardDeviceInfo.connectedNames()
+        LayoutRegistry.shared.applyProfile(forDeviceNames: names)
     }
 }

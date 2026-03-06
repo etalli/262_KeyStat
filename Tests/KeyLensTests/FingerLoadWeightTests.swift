@@ -143,15 +143,16 @@ final class FingerLoadWeightTests: XCTestCase {
     // LayoutRegistry の重みテーブルを実行時に差し替えられることを確認する。
 
     func testRegistry_customFingerLoadWeight() {
-        let original = LayoutRegistry.shared.fingerLoadWeight
-        defer { LayoutRegistry.shared.fingerLoadWeight = original }  // always restore
+        let original = LayoutRegistry.shared.activeProfile
+        defer { LayoutRegistry.shared.activeProfile = original }
 
-        // Replace default with a flat (all-equal) weight table.
-        // "a" is normally pinky (0.5), but with flat weights it should return 1.0.
-        // デフォルトを全指均等テーブルに置き換え → "a"（小指）の重みが 0.5 → 1.0 に変わる。
-        LayoutRegistry.shared.fingerLoadWeight = FingerLoadWeight(weights: [
-            .index: 1.0, .middle: 1.0, .thumb: 1.0, .ring: 1.0, .pinky: 1.0
-        ])
+        // Replace with a flat profile
+        LayoutRegistry.shared.activeProfile = ErgonomicProfile(
+            name: "Flat",
+            fingerWeights: FingerLoadWeight(weights: [
+                .index: 1.0, .middle: 1.0, .thumb: 1.0, .ring: 1.0, .pinky: 1.0
+            ])
+        )
         XCTAssertEqual(LayoutRegistry.shared.loadWeight(for: "a"), 1.0)
     }
 }

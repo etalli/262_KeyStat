@@ -347,15 +347,15 @@ final class KeyboardLayoutTests: XCTestCase {
             func hand(for keyName: String) -> Hand? { nil }
             func finger(for keyName: String) -> Finger? { nil }
         }
-        LayoutRegistry.shared.current = MockLayout()
+        LayoutRegistry.shared.activeProfile = ErgonomicProfile(name: "Mocking", layout: MockLayout())
         XCTAssertEqual(LayoutRegistry.shared.current.name, "Mock")
         // Restore to default
-        LayoutRegistry.shared.current = ANSILayout()
+        LayoutRegistry.shared.activeProfile = .standard
         XCTAssertEqual(LayoutRegistry.shared.current.name, "ANSI")
     }
 
     func testRegistry_noSplitConfig_usesLayout() {
-        LayoutRegistry.shared.splitConfig = nil
+        LayoutRegistry.shared.activeProfile = .standard
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "a"), .left)
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "j"), .right)
     }
@@ -367,7 +367,7 @@ final class KeyboardLayoutTests: XCTestCase {
             leftKeys:  ["a", "s", "d", "f", "g"],
             rightKeys: ["h", "j", "k", "l", "b"]
         )
-        LayoutRegistry.shared.splitConfig = config
+        LayoutRegistry.shared.activeProfile = ErgonomicProfile(name: "Test Split", splitConfig: config)
 
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "b"), .right)  // overridden by splitConfig
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "a"), .left)   // in splitConfig
@@ -375,7 +375,7 @@ final class KeyboardLayoutTests: XCTestCase {
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "z"), .left)
 
         // Cleanup
-        LayoutRegistry.shared.splitConfig = nil
+        LayoutRegistry.shared.activeProfile = .standard
     }
 
     // MARK: - finger(for keyName:) — ANSILayout
@@ -495,8 +495,8 @@ final class KeyboardLayoutTests: XCTestCase {
     func testRegistry_splitConfig_takesPreferenceOverLayout() {
         // splitConfig says "Space" is right — overrides ANSILayout's .left
         let config = SplitKeyboardConfig(name: "Flip", leftKeys: [], rightKeys: ["Space"])
-        LayoutRegistry.shared.splitConfig = config
+        LayoutRegistry.shared.activeProfile = ErgonomicProfile(name: "Flip", splitConfig: config)
         XCTAssertEqual(LayoutRegistry.shared.hand(for: "Space"), .right)
-        LayoutRegistry.shared.splitConfig = nil
+        LayoutRegistry.shared.activeProfile = .standard
     }
 }

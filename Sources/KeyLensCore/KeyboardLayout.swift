@@ -86,7 +86,7 @@ extension KeyboardLayout {
 /// Finger assignments follow conventional touch-typing standards.
 /// Modifier keys (Cmd, Shift, Ctrl, Option) are included because they
 /// contribute to finger load and ergonomic analysis.
-public struct ANSILayout: KeyboardLayout {
+public struct ANSILayout: KeyboardLayout, Equatable {
     public let name = "ANSI"
     public init() {}
 
@@ -363,7 +363,7 @@ public struct ANSILayout: KeyboardLayout {
 /// Use `standardSplit` for typical center-split keyboards (same split point as
 /// ANSI touch-typing convention). For non-standard splits, initialize directly
 /// with custom leftKeys / rightKeys sets.
-public struct SplitKeyboardConfig {
+public struct SplitKeyboardConfig: Equatable {
     public let name: String
     public let leftKeys: Set<String>
     public let rightKeys: Set<String>
@@ -401,25 +401,28 @@ public struct SplitKeyboardConfig {
 public final class LayoutRegistry {
     public static let shared = LayoutRegistry()
 
-    public var current: any KeyboardLayout = ANSILayout()
+    public var activeProfile: ErgonomicProfile = .standard
+    
+    /// Returns the active layout from the current profile.
+    public var current: any KeyboardLayout { activeProfile.layout }
 
-    /// Set to override hand assignment for split keyboard users. nil = use layout default.
-    public var splitConfig: SplitKeyboardConfig? = nil
-
-    /// Active finger load weight table. Defaults to Carpalx / Kim et al. values.
-    /// 有効な指負荷重みテーブル。デフォルトは Carpalx / Kim et al. の値。
-    public var fingerLoadWeight: FingerLoadWeight = .default
-
-    /// Returns the hand for a key name, respecting split config if set.
+    /// Returns the hand for a key name, respecting profile split config if set.
     public func hand(for keyName: String) -> Hand? {
-        splitConfig?.hand(for: keyName) ?? current.hand(for: keyName)
+        activeProfile.splitConfig?.hand(for: keyName) ?? activeProfile.layout.hand(for: keyName)
     }
 
     /// Returns the load weight for the finger assigned to a key name, or nil if the key is unknown.
     /// キー名からその指の負荷重みを返す。未知のキーは nil。
     public func loadWeight(for keyName: String) -> Double? {
-        guard let finger = current.finger(for: keyName) else { return nil }
-        return fingerLoadWeight.weight(for: finger)
+        guard let finger = activeProfile.layout.finger(for: keyName) else { return nil }
+        return activeProfile.fingerWeights.weight(for: finger)
+    }
+
+    // Deprecated properties — kept for backward compatibility if needed, but redirects to activeProfile
+    @available(*, deprecated, message: "Use activeProfile.layout instead")
+    public var _current: any KeyboardLayout {
+        get { activeProfile.layout }
+        set { /* No-op or update profile? Better to stick to activeProfile */ }
     }
 
     /// Active same-finger penalty model. Defaults to exponent = 2.0.
@@ -441,17 +444,17 @@ public final class LayoutRegistry {
 
         // Both keys must be on the same hand and use the same finger.
         // 同じ手・同じ指でなければ同指ビグラムではない。
-        guard let finger1 = current.finger(for: k1),
-              let finger2 = current.finger(for: k2),
+        guard let finger1 = activeProfile.layout.finger(for: k1),
+              let finger2 = activeProfile.layout.finger(for: k2),
               finger1 == finger2,
               let hand1 = hand(for: k1),
               let hand2 = hand(for: k2),
               hand1 == hand2 else { return nil }
 
-        guard let pos1 = current.position(for: k1),
-              let pos2 = current.position(for: k2) else { return nil }
+        guard let pos1 = activeProfile.layout.position(for: k1),
+              let pos2 = activeProfile.layout.position(for: k2) else { return nil }
 
-        let fw = fingerLoadWeight.weight(for: finger1)
+        let fw = activeProfile.fingerWeights.weight(for: finger1)
         return sameFingerPenaltyModel.penalty(from: pos1, to: pos2, fingerWeight: fw)
     }
 
@@ -499,9 +502,12 @@ public final class LayoutRegistry {
         base:   LayoutRegistry = .shared
     ) -> LayoutRegistry {
         let reg = LayoutRegistry()
-        reg.current                   = layout
-        reg.splitConfig               = base.splitConfig
-        reg.fingerLoadWeight          = base.fingerLoadWeight
+        reg.activeProfile = ErgonomicProfile(
+            name: "Simulation: \(layout.name)",
+            layout: layout,
+            fingerWeights: base.activeProfile.fingerWeights,
+            splitConfig: base.activeProfile.splitConfig
+        )
         reg.sameFingerPenaltyModel    = base.sameFingerPenaltyModel
         reg.alternationRewardModel    = base.alternationRewardModel
         reg.thumbImbalanceDetector    = base.thumbImbalanceDetector
@@ -509,5 +515,27 @@ public final class LayoutRegistry {
         reg.highStrainDetector        = base.highStrainDetector
         reg.ergonomicScoreEngine      = base.ergonomicScoreEngine
         return reg
+    }
+    
+    // MARK: - Hardware Awareness
+    
+    /// Updates the active profile based on the detected keyboard hardware names.
+    /// 接続中のキーボード名に基づいてアクティブプロファイルを更新する。
+    public func applyProfile(forDeviceNames names: [String]) {
+        let splitKeywords = ["split", "ergo", "moonlander", "advantage", "corne", "reviung", "pangaea"]
+        
+        let detectedSplit = names.contains { name in
+            let lower = name.lowercased()
+            return splitKeywords.contains { lower.contains($0) }
+        }
+        
+        let newProfile = detectedSplit ? ErgonomicProfile.splitErgo : ErgonomicProfile.standard
+        
+        if activeProfile != newProfile {
+            let devices = names.isEmpty ? "None" : names.joined(separator: ", ")
+            print("[LayoutRegistry] Hardware change detected: \(devices)")
+            print("[LayoutRegistry] Switching profile to: \(newProfile.name)")
+            activeProfile = newProfile
+        }
     }
 }
