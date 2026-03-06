@@ -151,69 +151,85 @@ extension Notification.Name {
 }
 
 // MARK: - CGEventTap コールバック
-// @convention(c) 互換にするためグローバル関数として定義（キャプチャ不要）
+// @convention(c) 互換にするためグローバル関数として定義。
+// All logic is delegated to KeyboardMonitor.handleEvent(proxy:type:event:) via refcon.
+// すべての処理は refcon 経由でインスタンスメソッドに委譲する。
 private func inputTapCallback(
     proxy: CGEventTapProxy,
     type: CGEventType,
     event: CGEvent,
     refcon: UnsafeMutableRawPointer?
 ) -> Unmanaged<CGEvent>? {
-    // タイムアウトで無効化された場合は即座に再有効化
-    if type == .tapDisabledByTimeout {
-        KeyLens.log("CGEventTap disabled by timeout — re-enabling")
-        if let refcon,
-           let tap = Unmanaged<KeyboardMonitor>.fromOpaque(refcon).takeUnretainedValue().eventTap {
-            CGEvent.tapEnable(tap: tap, enable: true)
-        }
-        return nil
-    }
+    guard let refcon else { return Unmanaged.passRetained(event) }
+    return Unmanaged<KeyboardMonitor>.fromOpaque(refcon)
+        .takeUnretainedValue()
+        .handleEvent(proxy: proxy, type: type, event: event)
+}
 
-    let name: String
-    switch type {
-    case .keyDown:
-        let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-        name = KeyboardMonitor.keyName(for: code)
-    case .leftMouseDown:
-        name = "🖱Left"
-    case .rightMouseDown:
-        name = "🖱Right"
-    case .otherMouseDown:
-        // ボタン番号 2 = 中ボタン、それ以外は番号で識別
-        let btn = event.getIntegerValueField(.mouseEventButtonNumber)
-        name = btn == 2 ? "🖱Middle" : "🖱Button\(btn)"
-    default:
+// MARK: - KeyboardMonitor event handling
+
+extension KeyboardMonitor {
+    /// Handles a single CGEventTap event. Called from the global trampoline via refcon.
+    /// グローバルトランポリンから refcon 経由で呼ばれるイベントハンドラ。
+    func handleEvent(
+        proxy: CGEventTapProxy,
+        type: CGEventType,
+        event: CGEvent
+    ) -> Unmanaged<CGEvent>? {
+        // タイムアウトで無効化された場合は即座に再有効化
+        if type == .tapDisabledByTimeout {
+            KeyLens.log("CGEventTap disabled by timeout — re-enabling")
+            if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
+            return nil
+        }
+
+        let name: String
+        switch type {
+        case .keyDown:
+            let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+            name = KeyboardMonitor.keyName(for: code)
+        case .leftMouseDown:
+            name = "🖱Left"
+        case .rightMouseDown:
+            name = "🖱Right"
+        case .otherMouseDown:
+            // ボタン番号 2 = 中ボタン、それ以外は番号で識別
+            let btn = event.getIntegerValueField(.mouseEventButtonNumber)
+            name = btn == 2 ? "🖱Middle" : "🖱Button\(btn)"
+        default:
+            return Unmanaged.passRetained(event)
+        }
+
+        let now = Date()
+        let appName = NSWorkspace.shared.frontmostApplication?.localizedName
+        let result = KeyCountStore.shared.increment(key: name, at: now, appName: appName)
+
+        if result.milestone {
+            // 通知はメインスレッドで発行
+            DispatchQueue.main.async {
+                NotificationManager.shared.notify(key: name, count: result.count)
+            }
+        }
+
+        if type == .keyDown {
+            // 修飾キー単体（左右両方）はオーバーレイに表示しない
+            let modifierKeyCodes: Set<CGKeyCode> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+            let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+            if !modifierKeyCodes.contains(code) {
+                // 修飾キー+キーの組み合わせを記録（⌃⌥⇧⌘ 順プレフィックス）
+                let flags = event.flags.intersection([.maskControl, .maskAlternate, .maskShift, .maskCommand])
+                if !flags.isEmpty {
+                    let prefix = KeyboardMonitor.modifierPrefix(for: flags)
+                    KeyCountStore.shared.incrementModified(key: "\(prefix)\(name)")
+                }
+
+                let displayName = KeyboardMonitor.overlayDisplayName(for: event, keyName: name)
+                let evt = KeystrokeEvent(displayName: displayName, keyCode: code)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .keystrokeInput, object: evt)
+                }
+            }
+        }
         return Unmanaged.passRetained(event)
     }
-
-    let now = Date()
-    let appName = NSWorkspace.shared.frontmostApplication?.localizedName
-    let result = KeyCountStore.shared.increment(key: name, at: now, appName: appName)
-
-    if result.milestone {
-        // 通知はメインスレッドで発行
-        DispatchQueue.main.async {
-            NotificationManager.shared.notify(key: name, count: result.count)
-        }
-    }
-
-    if type == .keyDown {
-        // 修飾キー単体（左右両方）はオーバーレイに表示しない
-        let modifierKeyCodes: Set<CGKeyCode> = [54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
-        let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-        if !modifierKeyCodes.contains(code) {
-            // 修飾キー+キーの組み合わせを記録（⌃⌥⇧⌘ 順プレフィックス）
-            let flags = event.flags.intersection([.maskControl, .maskAlternate, .maskShift, .maskCommand])
-            if !flags.isEmpty {
-                let prefix = KeyboardMonitor.modifierPrefix(for: flags)
-                KeyCountStore.shared.incrementModified(key: "\(prefix)\(name)")
-            }
-
-            let displayName = KeyboardMonitor.overlayDisplayName(for: event, keyName: name)
-            let evt = KeystrokeEvent(displayName: displayName, keyCode: code)
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .keystrokeInput, object: evt)
-            }
-        }
-    }
-    return Unmanaged.passRetained(event)
 }

@@ -197,16 +197,19 @@ Intercepts system-wide key-down events via `CGEventTap`.
 
 **Key design decision — `@convention(c)` constraint:**
 
-`CGEventTapCallBack` is a C function pointer type, which means Swift closures that capture variables cannot be used directly. The callback is therefore defined as a file-scope global function and accesses state only through singletons (`KeyCountStore.shared`, etc.), which require no capture.
+`CGEventTapCallBack` is a C function pointer type; Swift closures that capture variables cannot be used directly. The solution is a two-layer design:
 
 ```
-CGEvent.tapCreate(callback: inputTapCallback)
+CGEvent.tapCreate(callback: inputTapCallback, userInfo: Unmanaged.passUnretained(self).toOpaque())
                             ^
-                  global function (no captures)
-                  -> implicitly convertible to @convention(c)
+                  global trampoline (no captures, @convention(c) compatible)
+                  -> extracts self from refcon
+                  -> delegates to KeyboardMonitor.handleEvent(proxy:type:event:)
 ```
 
-**Tap recovery:** If the tap is disabled by system timeout (`.tapDisabledByTimeout`), the callback immediately re-enables it via `CGEvent.tapEnable`.
+The file-scope `inputTapCallback` is a minimal trampoline (~3 lines). All event-handling logic lives in the `handleEvent` instance method, which has direct access to `self.eventTap` and other instance state.
+
+**Tap recovery:** If the tap is disabled by system timeout (`.tapDisabledByTimeout`), `handleEvent` immediately re-enables it via `self.eventTap`.
 
 Key code to name translation is handled by a static lookup table in `keyName(for:)` (US keyboard layout).
 
