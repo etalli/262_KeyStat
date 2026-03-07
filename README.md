@@ -13,7 +13,7 @@ English | [日本語](docs/README.ja.md)
 
 <table>
   <tr>
-    <td><img src="images/menu_v037.png" width="280"/></td>
+    <td><img src="images/menu_v044.png" width="280"/></td>
     <td><img src="images/Heatmap.png" width="400"/></td>
   </tr>
   <tr>
