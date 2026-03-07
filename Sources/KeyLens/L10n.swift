@@ -293,6 +293,10 @@ final class L10n {
         ja("データをコピー", en: "Copy Data to Clipboard")
     }
 
+    var copyHeatmap: String {
+        ja("画像をコピー", en: "Copy Image")
+    }
+
     var copiedConfirmation: String {
         ja("コピーしました！", en: "Copied!")
     }

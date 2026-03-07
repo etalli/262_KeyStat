@@ -43,6 +43,7 @@ struct KeyboardHeatmapView: View {
     @State private var selectedCellID: String?
     @State private var showModeHelp: Bool = false
     @State private var showStrainLegendHelp: Bool = false
+    @State private var copyConfirmed = false
     @AppStorage("heatmapTemplate") private var template: HeatmapTemplate = .ansi
     @Environment(\.colorScheme) private var colorScheme
 
@@ -287,6 +288,13 @@ struct KeyboardHeatmapView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
 
+                    Button(action: copyToClipboard) {
+                        Label(copyConfirmed ? L10n.shared.copiedConfirmation : L10n.shared.copyHeatmap,
+                              systemImage: copyConfirmed ? "checkmark" : "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
                     Spacer()
 
                     if !deviceNames.isEmpty {
@@ -337,6 +345,31 @@ struct KeyboardHeatmapView: View {
                     try? pngData.write(to: url)
                 }
             }
+        }
+    }
+
+    @MainActor
+    private func copyToClipboard() {
+        let view = HeatmapExportView(
+            counts: counts,
+            mode: mode,
+            template: template,
+            keyboardKeyNames: keyboardKeyNames,
+            strainScores: strainScores
+        )
+        .frame(width: 800)
+        .background(Color(NSColor.windowBackgroundColor))
+
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2.0
+
+        guard let image = renderer.nsImage else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([image])
+
+        copyConfirmed = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            copyConfirmed = false
         }
     }
 }
