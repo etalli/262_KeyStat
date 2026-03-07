@@ -1398,14 +1398,14 @@ struct ActivityCalendarView: View {
         }
     }
 
-    /// Returns a colour for a given count relative to the maximum.
+    /// Returns a color for a given count relative to the maximum.
     /// 最大値を基準に打鍵数に対応する色を返す。
     private func intensityColor(count: Int, max: Int) -> Color {
         let fraction = max > 0 ? Double(count) / Double(max) : 0.0
         return intensityColor(fraction: fraction)
     }
 
-    /// Maps a normalised fraction [0,1] to a green-tinted intensity colour.
+    /// Maps a normalized fraction [0,1] to a green-tinted intensity color.
     /// 正規化された割合 [0,1] を緑系の強度色にマッピングする。
     private func intensityColor(fraction: Double) -> Color {
         if fraction == 0 { return Color(NSColor.controlBackgroundColor).opacity(0.6) }
