@@ -291,8 +291,8 @@ struct KeyboardHeatmapView: View {
 
                     if !deviceNames.isEmpty {
                         Text(deviceNames.joined(separator: "  /  "))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.primary)
                     }
                 }  // end mode HStack
             }  // end controls VStack
