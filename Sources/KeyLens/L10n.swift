@@ -117,6 +117,10 @@ final class L10n {
         ja("終了", en: "Quit")
     }
 
+    var dataMenuTitle: String {
+        ja("データ…", en: "Data…")
+    }
+
     var settingsMenuTitle: String {
         ja("設定…", en: "Settings…")
     }

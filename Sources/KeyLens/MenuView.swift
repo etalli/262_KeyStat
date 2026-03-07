@@ -30,19 +30,22 @@ struct MenuView: View {
         let l = L10n.shared
         let isRunning = appDelegate.isMonitoring
         return HStack(spacing: 6) {
-            Circle()
-                .fill(isRunning ? Color.green : Color.red)
-                .frame(width: 8, height: 8)
             if isRunning {
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 8, height: 8)
                 Text(l.monitoringActive.dropFirst(2))
                     .font(.system(size: 13, weight: .medium))
             } else {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.orange)
                 Button(l.monitoringStopped.dropFirst(2)) {
                     appDelegate.openAccessibilitySettings()
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.primary)
+                .foregroundColor(.orange)
             }
             Spacer()
         }
@@ -85,8 +88,7 @@ struct MenuView: View {
     private var actionRow: some View {
         let l = L10n.shared
         return VStack(alignment: .leading, spacing: 0) {
-            menuRow(l.showAllMenuItem, icon: "list.bullet")      { appDelegate.showAllStats() }
-            menuRow(l.chartsMenuItem,  icon: "chart.bar.xaxis")  { appDelegate.showCharts() }
+            menuRow(l.chartsMenuItem, icon: "chart.bar.xaxis") { appDelegate.showCharts() }
         }
     }
 
@@ -187,13 +189,12 @@ private struct OverlayRow: View {
             Button(action: { appDelegate.showOverlaySettings() }) {
                 Image(systemName: "gearshape")
                     .font(.system(size: 12))
-                    .foregroundColor(isHovered ? .secondary : .clear)
+                    .foregroundColor(isHovered ? .secondary : Color.secondary.opacity(0.3))
                     .frame(width: 16)
                     .padding(.vertical, 6)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .allowsHitTesting(isHovered)
 
             // チェックマーク（最右端・固定位置・他の toggleRow と揃える）
             Image(systemName: "checkmark")
@@ -226,7 +227,7 @@ private struct DataMenuRow: View {
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
                     .frame(width: 16)
-                Text("Data...")
+                Text(L10n.shared.dataMenuTitle)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
                 Spacer()
@@ -254,6 +255,8 @@ private struct DataMenuRow: View {
             menu.addItem(item)
         }
 
+        add(l.showAllMenuItem)         { appDelegate.showAllStats() }
+        menu.addItem(.separator())
         add(l.exportCSVMenuItem)       { appDelegate.exportCSV() }
         add(appDelegate.copyConfirmed ? "\(l.copyDataMenuItem) - \(l.copiedConfirmation)" : l.copyDataMenuItem) {
             appDelegate.copyDataToClipboard()
