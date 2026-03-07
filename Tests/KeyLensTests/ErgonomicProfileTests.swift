@@ -24,6 +24,7 @@ final class ErgonomicProfileTests: XCTestCase {
         registry.applyProfile(forDeviceNames: ["Generic Keyboard", "Apple Internal Keyboard"])
         XCTAssertEqual(registry.activeProfile.name, ErgonomicProfile.standard.name)
         XCTAssertEqual(registry.activeProfile.fingerWeights.weight(for: .thumb), 0.8)
+        XCTAssertEqual(registry.currentDeviceLabel, "Apple Internal Keyboard / Generic Keyboard")
         
         // Test split keyboard detection
         registry.applyProfile(forDeviceNames: ["ZSA Moonlander", "Apple Internal Keyboard"])
@@ -37,6 +38,15 @@ final class ErgonomicProfileTests: XCTestCase {
         // Test Pangaea keyboard
         registry.applyProfile(forDeviceNames: ["Pangaea Keyboard"])
         XCTAssertEqual(registry.activeProfile.name, ErgonomicProfile.splitErgo.name)
+    }
+    
+    func testResolvedDeviceLabelNormalizesNames() {
+        XCTAssertEqual(
+            LayoutRegistry.resolvedDeviceLabel(for: ["ZSA Moonlander", "  Apple Internal Keyboard  ", "ZSA Moonlander"]),
+            "Apple Internal Keyboard / ZSA Moonlander"
+        )
+        XCTAssertEqual(LayoutRegistry.resolvedDeviceLabel(for: []), "Unknown Keyboard")
+        XCTAssertEqual(LayoutRegistry.resolvedDeviceLabel(for: ["   "]), "Unknown Keyboard")
     }
     
     func testWeightResolution() {

@@ -64,6 +64,23 @@ struct AppErgScoreEntry: Identifiable {
     }
 }
 
+struct DeviceEntry: Identifiable {
+    let id: String
+    let device: String
+    let count: Int
+    init(_ t: (device: String, count: Int)) { id = t.device; device = t.device; count = t.count }
+}
+
+struct DeviceErgScoreEntry: Identifiable {
+    let id: String
+    let device: String
+    let score: Double
+    let keystrokes: Int
+    init(_ t: (device: String, score: Double, keystrokes: Int)) {
+        id = t.device; device = t.device; score = t.score; keystrokes = t.keystrokes
+    }
+}
+
 // Issue #5: Hourly distribution entry (for Chart)
 // 時間帯別打鍵数チャート用エントリ
 struct HourEntry: Identifiable {
@@ -248,6 +265,13 @@ struct ChartsView: View {
                         appErgScoreTable
                     }
                 }
+                chartSection(L10n.shared.devicesAllTime, helpText: L10n.shared.helpDevices) { topDevicesChart }
+                chartSection(L10n.shared.devicesToday) { todayTopDevicesChart }
+                if !model.deviceErgScores.isEmpty {
+                    chartSection(L10n.shared.deviceErgScoreSection, helpText: L10n.shared.helpDeviceErgScore) {
+                        deviceErgScoreTable
+                    }
+                }
             }
             .padding(24)
         }
@@ -283,6 +307,57 @@ struct ChartsView: View {
                         .frame(width: 80, alignment: .trailing)
                     HStack(spacing: 4) {
                         // Score bar (fills proportionally from 0–100)
+                        GeometryReader { geo in
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(scoreColor(entry.score).opacity(0.25))
+                                .frame(width: geo.size.width)
+                                .overlay(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(scoreColor(entry.score))
+                                        .frame(width: geo.size.width * entry.score / 100)
+                                }
+                        }
+                        .frame(width: 44, height: 8)
+                        Text(String(format: "%.0f", entry.score))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundStyle(scoreColor(entry.score))
+                            .frame(width: 28, alignment: .trailing)
+                    }
+                    .frame(width: 80, alignment: .trailing)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                Divider().padding(.horizontal, 12)
+            }
+        }
+    }
+
+    private var deviceErgScoreTable: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(L10n.shared.deviceErgScoreDeviceHeader)
+                    .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                Text(L10n.shared.deviceErgScoreKeysHeader)
+                    .font(.caption).foregroundStyle(.secondary).frame(width: 80, alignment: .trailing)
+                Text(L10n.shared.deviceErgScoreScoreHeader)
+                    .font(.caption).foregroundStyle(.secondary).frame(width: 80, alignment: .trailing)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.primary.opacity(0.05))
+            .cornerRadius(6)
+
+            ForEach(model.deviceErgScores) { entry in
+                HStack {
+                    Text(entry.device)
+                        .font(.system(size: 13))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(1)
+                    Text(entry.keystrokes.formatted())
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 80, alignment: .trailing)
+                    HStack(spacing: 4) {
                         GeometryReader { geo in
                             RoundedRectangle(cornerRadius: 3)
                                 .fill(scoreColor(entry.score).opacity(0.25))
@@ -481,6 +556,56 @@ struct ChartsView: View {
             .chartYScale(domain: appOrder.reversed())
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.todayTopApps.count * 28 + 24))
+        }
+    }
+
+    @ViewBuilder
+    private var topDevicesChart: some View {
+        if model.topDevices.isEmpty {
+            emptyState
+        } else {
+            let deviceOrder = model.topDevices.map(\.device)
+            Chart(model.topDevices) { item in
+                BarMark(
+                    x: .value("Count", item.count),
+                    y: .value("Device", item.device)
+                )
+                .foregroundStyle(Color.indigo.gradient)
+                .cornerRadius(3)
+                .annotation(position: .trailing, spacing: 4) {
+                    Text(item.count.formatted())
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartYScale(domain: deviceOrder.reversed())
+            .chartLegend(.hidden)
+            .frame(height: CGFloat(model.topDevices.count * 28 + 24))
+        }
+    }
+
+    @ViewBuilder
+    private var todayTopDevicesChart: some View {
+        if model.todayTopDevices.isEmpty {
+            emptyState
+        } else {
+            let deviceOrder = model.todayTopDevices.map(\.device)
+            Chart(model.todayTopDevices) { item in
+                BarMark(
+                    x: .value("Count", item.count),
+                    y: .value("Device", item.device)
+                )
+                .foregroundStyle(Color.purple.gradient)
+                .cornerRadius(3)
+                .annotation(position: .trailing, spacing: 4) {
+                    Text(item.count.formatted())
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartYScale(domain: deviceOrder.reversed())
+            .chartLegend(.hidden)
+            .frame(height: CGFloat(model.todayTopDevices.count * 28 + 24))
         }
     }
 

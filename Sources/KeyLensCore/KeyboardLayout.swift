@@ -403,6 +403,11 @@ public final class LayoutRegistry {
 
     public var activeProfile: ErgonomicProfile = .standard
     
+    /// Human-readable label for the currently detected keyboard device set.
+    /// Uses the connected HID product names when available.
+    /// 現在検出されているキーボードデバイス集合の表示ラベル。
+    public private(set) var currentDeviceLabel: String = "Unknown Keyboard"
+    
     /// Returns the active layout from the current profile.
     public var current: any KeyboardLayout { activeProfile.layout }
 
@@ -514,15 +519,31 @@ public final class LayoutRegistry {
         reg.thumbEfficiencyCalculator = base.thumbEfficiencyCalculator
         reg.highStrainDetector        = base.highStrainDetector
         reg.ergonomicScoreEngine      = base.ergonomicScoreEngine
+        reg.currentDeviceLabel        = base.currentDeviceLabel
         return reg
     }
     
     // MARK: - Hardware Awareness
     
+    /// Normalises the connected device name list into a stable display label.
+    /// 接続デバイス名の配列を安定した表示ラベルに正規化する。
+    static func resolvedDeviceLabel(for names: [String]) -> String {
+        let cleaned = Array(
+            Set(
+                names
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+            )
+        ).sorted()
+        guard !cleaned.isEmpty else { return "Unknown Keyboard" }
+        return cleaned.joined(separator: " / ")
+    }
+    
     /// Updates the active profile based on the detected keyboard hardware names.
     /// 接続中のキーボード名に基づいてアクティブプロファイルを更新する。
     public func applyProfile(forDeviceNames names: [String]) {
         let splitKeywords = ["split", "ergo", "moonlander", "advantage", "corne", "reviung", "pangaea"]
+        currentDeviceLabel = Self.resolvedDeviceLabel(for: names)
         
         let detectedSplit = names.contains { name in
             let lower = name.lowercased()

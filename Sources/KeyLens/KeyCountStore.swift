@@ -53,11 +53,20 @@ private struct CountData: Codable {
     var appCounts: [String: Int]
     // Daily per-application keystroke counts — "yyyy-MM-dd" -> appName -> count
     var dailyAppCounts: [String: [String: Int]]
+    // Per-device keystroke counts — deviceLabel -> total count
+    var deviceCounts: [String: Int]
+    // Daily per-device keystroke counts — "yyyy-MM-dd" -> deviceLabel -> count
+    var dailyDeviceCounts: [String: [String: Int]]
     // Per-application bigram tracking for ergonomic score computation
     var appSameFingerCount:      [String: Int]   // appName -> cumulative same-finger bigrams
     var appTotalBigramCount:     [String: Int]   // appName -> cumulative total bigrams
     var appHandAlternationCount: [String: Int]   // appName -> cumulative hand-alternating bigrams
     var appHighStrainBigramCount: [String: Int]  // appName -> cumulative high-strain bigrams
+    // Per-device bigram tracking for ergonomic score computation
+    var deviceSameFingerCount:      [String: Int]   // deviceLabel -> cumulative same-finger bigrams
+    var deviceTotalBigramCount:     [String: Int]   // deviceLabel -> cumulative total bigrams
+    var deviceHandAlternationCount: [String: Int]   // deviceLabel -> cumulative hand-alternating bigrams
+    var deviceHighStrainBigramCount: [String: Int]  // deviceLabel -> cumulative high-strain bigrams
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
@@ -74,8 +83,11 @@ private struct CountData: Codable {
         case highStrainTrigramCount, dailyHighStrainTrigramCount
         case trigramCounts, dailyTrigramCounts
         case appCounts, dailyAppCounts
+        case deviceCounts, dailyDeviceCounts
         case appSameFingerCount, appTotalBigramCount
         case appHandAlternationCount, appHighStrainBigramCount
+        case deviceSameFingerCount, deviceTotalBigramCount
+        case deviceHandAlternationCount, deviceHighStrainBigramCount
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
@@ -107,10 +119,16 @@ private struct CountData: Codable {
         self.dailyTrigramCounts = [:]
         self.appCounts = [:]
         self.dailyAppCounts = [:]
+        self.deviceCounts = [:]
+        self.dailyDeviceCounts = [:]
         self.appSameFingerCount = [:]
         self.appTotalBigramCount = [:]
         self.appHandAlternationCount = [:]
         self.appHighStrainBigramCount = [:]
+        self.deviceSameFingerCount = [:]
+        self.deviceTotalBigramCount = [:]
+        self.deviceHandAlternationCount = [:]
+        self.deviceHighStrainBigramCount = [:]
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -154,11 +172,17 @@ private struct CountData: Codable {
         dailyTrigramCounts = (try? c.decode([String: [String: Int]].self, forKey: .dailyTrigramCounts)) ?? [:]
         appCounts      = (try? c.decode([String: Int].self,            forKey: .appCounts))      ?? [:]
         dailyAppCounts = (try? c.decode([String: [String: Int]].self, forKey: .dailyAppCounts)) ?? [:]
+        deviceCounts      = (try? c.decode([String: Int].self,            forKey: .deviceCounts))      ?? [:]
+        dailyDeviceCounts = (try? c.decode([String: [String: Int]].self, forKey: .dailyDeviceCounts)) ?? [:]
         // Per-app bigram ergonomic tracking: default to empty when reading old JSON (backward compatible)
         appSameFingerCount       = (try? c.decode([String: Int].self, forKey: .appSameFingerCount))       ?? [:]
         appTotalBigramCount      = (try? c.decode([String: Int].self, forKey: .appTotalBigramCount))      ?? [:]
         appHandAlternationCount  = (try? c.decode([String: Int].self, forKey: .appHandAlternationCount))  ?? [:]
         appHighStrainBigramCount = (try? c.decode([String: Int].self, forKey: .appHighStrainBigramCount)) ?? [:]
+        deviceSameFingerCount       = (try? c.decode([String: Int].self, forKey: .deviceSameFingerCount))       ?? [:]
+        deviceTotalBigramCount      = (try? c.decode([String: Int].self, forKey: .deviceTotalBigramCount))      ?? [:]
+        deviceHandAlternationCount  = (try? c.decode([String: Int].self, forKey: .deviceHandAlternationCount))  ?? [:]
+        deviceHighStrainBigramCount = (try? c.decode([String: Int].self, forKey: .deviceHighStrainBigramCount)) ?? [:]
     }
 }
 
@@ -223,6 +247,7 @@ final class KeyCountStore {
     func increment(key: String, at timestamp: Date = Date(), appName: String? = nil) -> (count: Int, milestone: Bool) {
         let today = todayKey
         let hourKey = currentHourKey
+        let deviceName = LayoutRegistry.shared.currentDeviceLabel
         let count: Int = queue.sync {
             store.counts[key, default: 0] += 1
             store.dailyCounts[today, default: [:]][key, default: 0] += 1
@@ -233,6 +258,8 @@ final class KeyCountStore {
                 store.appCounts[app, default: 0] += 1
                 store.dailyAppCounts[today, default: [:]][app, default: 0] += 1
             }
+            store.deviceCounts[deviceName, default: 0] += 1
+            store.dailyDeviceCounts[today, default: [:]][deviceName, default: 0] += 1
 
             // Save previous timestamp before updating — needed for per-bigram IKI below.
             let prevInputTime = store.lastInputTime
@@ -313,6 +340,16 @@ final class KeyCountStore {
                     if highStrain {
                         store.appHighStrainBigramCount[app, default: 0] += 1
                     }
+                }
+                store.deviceTotalBigramCount[deviceName, default: 0] += 1
+                if prevFinger == curFinger && prevHand == curHand {
+                    store.deviceSameFingerCount[deviceName, default: 0] += 1
+                }
+                if prevHand != curHand {
+                    store.deviceHandAlternationCount[deviceName, default: 0] += 1
+                }
+                if highStrain {
+                    store.deviceHighStrainBigramCount[deviceName, default: 0] += 1
                 }
                 // General trigram frequency (Issue #12) — 3-key rolling window.
                 // Only records when secondLastKeyName is available (3rd key onwards).
@@ -661,6 +698,15 @@ final class KeyCountStore {
                            .map { ($0.key, $0.value) }
         }
     }
+    
+    /// 累計デバイス別打鍵数の上位 limit 件を降順で返す
+    func topDevices(limit: Int = 20) -> [(device: String, count: Int)] {
+        queue.sync {
+            store.deviceCounts.sorted { $0.value > $1.value }
+                              .prefix(limit)
+                              .map { ($0.key, $0.value) }
+        }
+    }
 
     /// Per-app ergonomic scores for apps with at least minKeystrokes total keystrokes.
     /// Returns entries sorted by score descending.
@@ -688,11 +734,48 @@ final class KeyCountStore {
                 .sorted { $0.score > $1.score }
         }
     }
+    
+    /// Per-device ergonomic scores for devices with at least minKeystrokes total keystrokes.
+    /// Returns entries sorted by score descending.
+    /// minKeystrokes 以上打鍵があるデバイスのエルゴノミクススコアを降順で返す。
+    func deviceErgonomicScores(minKeystrokes: Int = 100) -> [(device: String, score: Double, keystrokes: Int)] {
+        queue.sync {
+            let engine = LayoutRegistry.shared.ergonomicScoreEngine
+            return store.deviceCounts
+                .filter { $0.value >= minKeystrokes }
+                .compactMap { (device, keystrokes) -> (device: String, score: Double, keystrokes: Int)? in
+                    let bigrams = store.deviceTotalBigramCount[device] ?? 0
+                    guard bigrams > 0 else { return nil }
+                    let sfRate  = Double(store.deviceSameFingerCount[device]       ?? 0) / Double(bigrams)
+                    let hsRate  = Double(store.deviceHighStrainBigramCount[device] ?? 0) / Double(bigrams)
+                    let altRate = Double(store.deviceHandAlternationCount[device]  ?? 0) / Double(bigrams)
+                    let score = engine.score(
+                        sameFingerRate:             sfRate,
+                        highStrainRate:             hsRate,
+                        thumbImbalanceRatio:        0.0,
+                        handAlternationRate:        altRate,
+                        thumbEfficiencyCoefficient: 0.0
+                    )
+                    return (device: device, score: score, keystrokes: keystrokes)
+                }
+                .sorted { $0.score > $1.score }
+        }
+    }
 
     /// 本日のアプリ別打鍵数の上位 limit 件を降順で返す
     func todayTopApps(limit: Int = 10) -> [(app: String, count: Int)] {
         queue.sync {
             (store.dailyAppCounts[todayKey] ?? [:])
+                .sorted { $0.value > $1.value }
+                .prefix(limit)
+                .map { ($0.key, $0.value) }
+        }
+    }
+    
+    /// 本日のデバイス別打鍵数の上位 limit 件を降順で返す
+    func todayTopDevices(limit: Int = 10) -> [(device: String, count: Int)] {
+        queue.sync {
+            (store.dailyDeviceCounts[todayKey] ?? [:])
                 .sorted { $0.value > $1.value }
                 .prefix(limit)
                 .map { ($0.key, $0.value) }

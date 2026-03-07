@@ -31,7 +31,7 @@ English | [日本語](docs/README.ja.md)
 - **Global monitoring** — Counts all keystrokes regardless of the active application
 - **Menu bar statistics** — Today's count, total count, average keystroke interval
 - **Show All** — Full ranked list of every key with total and today's counts
-- **Charts** — Keyboard Heatmap, Top Keys, Bigrams, Daily Totals, Ergonomic Learning Curve, Weekly Delta Report, and more
+- **Charts** — Keyboard Heatmap, Top Keys, Bigrams, Apps, Devices, Daily Totals, Ergonomic Learning Curve, Weekly Delta Report, and more
 - **Keystroke Overlay** — Real-time floating window showing recent keystrokes (⌘C / ⇧A style)
 
 ---
@@ -80,6 +80,7 @@ Open via **Charts** in the menu. Sections (scroll down):
 | **Key Categories** | Donut chart of key-type distribution |
 | **Keyboard Shortcuts** | Top modifier+key combinations |
 | **Apps** | Per-application keystroke bar charts (all-time and today) and ergonomic score table |
+| **Devices** | Per-device keystroke bar charts (all-time and today) and ergonomic score table |
 
 ### AI Analysis
 

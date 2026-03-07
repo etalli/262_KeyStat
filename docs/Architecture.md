@@ -297,6 +297,7 @@ Chart sections (in display order):
 - **⌘ Keyboard Shortcuts** — top modifier+key combos
 - **All Keyboard Combos** — all modifier combinations
 - **Apps** — per-application keystroke bar charts (all-time and today) + ergonomic score table (apps with ≥100 keystrokes, colour-coded: green ≥80 / orange 60–79 / red <60)
+- **Devices** — per-device keystroke bar charts (all-time and today) + ergonomic score table (detected keyboard labels with ≥100 keystrokes)
 
 `ChartDataModel` (ObservableObject in `ChartsWindowController.swift`) holds all chart data and exposes `reload()` to refresh from `KeyCountStore`. Phase 3 additions: `dailyErgonomics: [DailyErgonomicEntry]` and `weeklyDeltas: [WeeklyDeltaRow]`.
 
@@ -430,6 +431,12 @@ Writes are debounced (2 s) and atomic (`.atomic` flag) to prevent corruption.
 | `appTotalBigramCount` | `{String: Int}` | Cumulative total bigrams per app (denominator) |
 | `appHandAlternationCount` | `{String: Int}` | Cumulative hand-alternating bigrams per app |
 | `appHighStrainBigramCount` | `{String: Int}` | Cumulative high-strain bigrams per app |
+| `deviceCounts` | `{String: Int}` | Cumulative keystroke count per detected keyboard device label |
+| `dailyDeviceCounts` | `{date: {String: Int}}` | Per-day per-device keystroke counts |
+| `deviceSameFingerCount` | `{String: Int}` | Cumulative same-finger bigrams per device |
+| `deviceTotalBigramCount` | `{String: Int}` | Cumulative total bigrams per device (denominator) |
+| `deviceHandAlternationCount` | `{String: Int}` | Cumulative hand-alternating bigrams per device |
+| `deviceHighStrainBigramCount` | `{String: Int}` | Cumulative high-strain bigrams per device |
 
 All fields except `startedAt` and `counts` use optional decoding with safe defaults,
 ensuring forward/backward compatibility when new fields are added.

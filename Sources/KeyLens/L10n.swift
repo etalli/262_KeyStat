@@ -418,6 +418,21 @@ final class L10n {
         )
     }
 
+    var devicesAllTime: String {
+        ja("デバイス別打鍵数 — 累計", en: "Top Devices — All Time")
+    }
+
+    var devicesToday: String {
+        ja("デバイス別打鍵数 — 本日", en: "Top Devices — Today")
+    }
+
+    var helpDevices: String {
+        ja(
+            "検出されたキーボードデバイス名ごとに打鍵数を表示します。内蔵キーボードと外付けキーボードでの使用傾向を比較できます。",
+            en: "Keystroke counts grouped by detected keyboard device name. Useful for comparing built-in and external keyboard usage."
+        )
+    }
+
     var appErgScoreSection: String {
         ja("アプリ別エルゴノミクススコア", en: "Ergonomic Score by App")
     }
@@ -438,6 +453,29 @@ final class L10n {
     }
 
     var appErgScoreScoreHeader: String {
+        ja("スコア", en: "Score")
+    }
+
+    var deviceErgScoreSection: String {
+        ja("デバイス別エルゴノミクススコア", en: "Ergonomic Score by Device")
+    }
+
+    var helpDeviceErgScore: String {
+        ja(
+            "100打鍵以上のデバイスについて、実際の打鍵データから算出したエルゴノミクススコア（0〜100）を表示します。スコアが高いほど、同指率・高負荷率が低く、左右交互打鍵率が高い状態です。",
+            en: "Ergonomic score (0–100) computed from actual typing data for devices with ≥100 keystrokes. Higher is better: lower same-finger and high-strain rates, higher hand alternation."
+        )
+    }
+
+    var deviceErgScoreDeviceHeader: String {
+        ja("デバイス", en: "Device")
+    }
+
+    var deviceErgScoreKeysHeader: String {
+        ja("打鍵数", en: "Keystrokes")
+    }
+
+    var deviceErgScoreScoreHeader: String {
         ja("スコア", en: "Score")
     }
 
