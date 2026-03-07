@@ -88,7 +88,7 @@ struct OverlayView: View {
 
 // MARK: - KeystrokeOverlayController
 
-final class KeystrokeOverlayController {
+final class KeystrokeOverlayController: NSObject, NSWindowDelegate {
     static let shared = KeystrokeOverlayController()
     static let enabledKey = "overlayEnabled"
 
@@ -107,7 +107,7 @@ final class KeystrokeOverlayController {
         }
     }
 
-    private init() {
+    private override init() {
         panel = NSPanel(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
@@ -119,11 +119,16 @@ final class KeystrokeOverlayController {
         panel.backgroundColor = .clear
         panel.hasShadow = false
         panel.ignoresMouseEvents = true
+        panel.isMovableByWindowBackground = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
         // contentViewController 経由で設定することで、NSPanel が VC のライフタイムを管理する
         hostVC = NSHostingController(rootView: OverlayView(viewModel: viewModel))
+
+        super.init()
+
         panel.contentViewController = hostVC
+        panel.delegate = self
 
         NotificationCenter.default.addObserver(
             self,
@@ -154,19 +159,35 @@ final class KeystrokeOverlayController {
         panel.contentView?.layoutSubtreeIfNeeded()
         let s = panel.contentView?.fittingSize ?? NSSize(width: 280, height: 50)
         let size = NSSize(width: max(s.width, 60), height: max(s.height, 44))
-        let margin: CGFloat = 20
+        let config = OverlayConfig.current
         let origin: NSPoint
-        switch OverlayConfig.current.position {
-        case .topLeft:
-            origin = NSPoint(x: f.minX + margin, y: f.maxY - size.height - margin)
-        case .topRight:
-            origin = NSPoint(x: f.maxX - size.width - margin, y: f.maxY - size.height - margin)
-        case .bottomLeft:
-            origin = NSPoint(x: f.minX + margin, y: f.minY + margin)
-        case .bottomRight:
-            origin = NSPoint(x: f.maxX - size.width - margin, y: f.minY + margin)
+        // Use custom dragged position if set; otherwise fall back to preset corner
+        // ドラッグ後のカスタム位置があればそれを使い、なければプリセットコーナーを使う
+        if let cx = config.customX, let cy = config.customY {
+            origin = NSPoint(x: cx, y: cy)
+        } else {
+            let margin: CGFloat = 20
+            switch config.position {
+            case .topLeft:
+                origin = NSPoint(x: f.minX + margin, y: f.maxY - size.height - margin)
+            case .topRight:
+                origin = NSPoint(x: f.maxX - size.width - margin, y: f.maxY - size.height - margin)
+            case .bottomLeft:
+                origin = NSPoint(x: f.minX + margin, y: f.minY + margin)
+            case .bottomRight:
+                origin = NSPoint(x: f.maxX - size.width - margin, y: f.minY + margin)
+            }
         }
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
+    }
+
+    // NSWindowDelegate: save position when user drags the panel
+    // ドラッグ終了後に位置を保存する
+    func windowDidMove(_ notification: Notification) {
+        var config = OverlayConfig.current
+        config.customX = Double(panel.frame.origin.x)
+        config.customY = Double(panel.frame.origin.y)
+        config.save()
     }
 
     // MARK: - Listening
@@ -184,9 +205,18 @@ final class KeystrokeOverlayController {
             if !self.panel.isVisible {
                 self.panel.orderFront(nil)
             }
+            // Enable mouse events while visible so the user can drag the overlay
+            // 表示中はマウスイベントを有効にしてドラッグ可能にする
+            self.panel.ignoresMouseEvents = false
             // SwiftUI のレイアウトが確定してからサイズを更新する
             DispatchQueue.main.async { [weak self] in
                 self?.placePanel()
+            }
+            // Restore mouse passthrough after fade delay + animation
+            // フェードアウト後にマウスパススルーを復元する
+            let delay = self.viewModel.config.fadeDelay + 0.7
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.panel.ignoresMouseEvents = true
             }
         }
     }

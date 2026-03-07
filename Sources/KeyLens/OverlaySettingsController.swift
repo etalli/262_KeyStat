@@ -60,6 +60,10 @@ struct OverlayConfig: Codable, Equatable {
     var fontColor:         String          = "#FFFFFF"
     var backgroundColor:   String          = "#000000"
     var cornerRadius:      Double          = 10.0
+    // Custom position set by dragging (nil = use preset position)
+    // ドラッグで設定したカスタム位置（nil = プリセット位置を使用）
+    var customX:           Double?         = nil
+    var customY:           Double?         = nil
 
     static let userDefaultsKey = "overlayConfig"
 
@@ -194,7 +198,13 @@ struct OverlaySettingsView: View {
     }
 
     private func positionButton(_ pos: OverlayPosition) -> some View {
-        Button(action: { config.position = pos }) {
+        Button(action: {
+            config.position = pos
+            // Clear custom drag position so the preset takes effect
+            // プリセット選択時はドラッグ位置をリセットする
+            config.customX = nil
+            config.customY = nil
+        }) {
             HStack(spacing: 4) {
                 Image(systemName: config.position == pos ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(config.position == pos ? Color.accentColor : Color.secondary)
