@@ -1336,43 +1336,51 @@ struct ActivityCalendarView: View {
                 Spacer().frame(width: 0)
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: spacing) {
-                    // DOW header column (Sun → Sat labels on left side)
-                    // 曜日ヘッダー列（左側）
-                    VStack(alignment: .trailing, spacing: spacing) {
-                        ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { label in
-                            Text(label)
-                                .font(.system(size: 9, design: .monospaced))
-                                .foregroundStyle(.secondary)
-                                .frame(width: cellSize, height: cellSize)
-                        }
-                    }
-
-                    // Week columns
-                    // 週ごとの列
-                    ForEach(0..<cols, id: \.self) { col in
-                        VStack(spacing: spacing) {
-                            ForEach(0..<7, id: \.self) { row in
-                                let idx = col * 7 + row
-                                if idx < days.count && !days[idx].date.isEmpty {
-                                    let day = days[idx]
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .fill(intensityColor(count: day.count, max: max))
-                                        .frame(width: cellSize, height: cellSize)
-                                        .help("\(day.date): \(day.count.formatted()) keystrokes")
-                                } else {
-                                    // Empty padding slot or out-of-range
-                                    // 空スロット
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .fill(Color.clear)
-                                        .frame(width: cellSize, height: cellSize)
-                                }
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: spacing) {
+                        // DOW header column (Sun → Sat labels on left side)
+                        // 曜日ヘッダー列（左側）
+                        VStack(alignment: .trailing, spacing: spacing) {
+                            ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { label in
+                                Text(label)
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: cellSize, height: cellSize)
                             }
                         }
+
+                        // Week columns
+                        // 週ごとの列
+                        ForEach(0..<cols, id: \.self) { col in
+                            VStack(spacing: spacing) {
+                                ForEach(0..<7, id: \.self) { row in
+                                    let idx = col * 7 + row
+                                    if idx < days.count && !days[idx].date.isEmpty {
+                                        let day = days[idx]
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(intensityColor(count: day.count, max: max))
+                                            .frame(width: cellSize, height: cellSize)
+                                            .help("\(day.date): \(day.count.formatted()) keystrokes")
+                                    } else {
+                                        // Empty padding slot or out-of-range
+                                        // 空スロット
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color.clear)
+                                            .frame(width: cellSize, height: cellSize)
+                                    }
+                                }
+                            }
+                            .id(col)
+                        }
                     }
+                    .padding(.bottom, 4)
                 }
-                .padding(.bottom, 4)
+                .onAppear {
+                    // Scroll to the rightmost (most recent) week on load
+                    // 表示時に最新週（右端）へスクロール
+                    proxy.scrollTo(cols - 1, anchor: .trailing)
+                }
             }
 
             // Intensity legend
