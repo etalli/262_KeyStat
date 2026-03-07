@@ -267,7 +267,7 @@ struct KeyboardHeatmapView: View {
                     .frame(maxWidth: 180)
 
                     Image(systemName: "info.circle")
-                        .font(.caption)
+                        .font(.body)
                         .foregroundStyle(showModeHelp ? .primary : .secondary)
                         .onHover { showModeHelp = $0 }
                         .popover(isPresented: $showModeHelp, arrowEdge: .bottom) {
@@ -449,7 +449,7 @@ struct HeatmapExportView: View {
     private var mouseSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.shared.heatmapMouse)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
             HStack(spacing: keySpacing) {
                 ForEach(Array(mouseButtons.enumerated()), id: \.offset) { idx, key in
