@@ -51,11 +51,11 @@ public struct LayoutComparison: Equatable {
     /// 同一打鍵データに対して最適化提案レイアウトを適用したスナップショット。
     public let proposed: ErgonomicSnapshot
 
-    /// The key swaps recommended by the optimizer, in order of projected SFB improvement.
-    /// オプティマイザが提案するキースワップ（SFB改善量降順）。
-    public let recommendedSwaps: [KeySwap]
+    /// The key relocations recommended by the optimizer, in order of projected improvement.
+    /// オプティマイザが提案するキー移動（改善量降順）。
+    public let recommendedSwaps: [ErgonomicSwap]
 
-    public init(current: ErgonomicSnapshot, proposed: ErgonomicSnapshot, recommendedSwaps: [KeySwap]) {
+    public init(current: ErgonomicSnapshot, proposed: ErgonomicSnapshot, recommendedSwaps: [ErgonomicSwap]) {
         self.current          = current
         self.proposed         = proposed
         self.recommendedSwaps = recommendedSwaps
@@ -131,12 +131,13 @@ public struct LayoutComparison: Equatable {
             estimator:    estimator
         )
 
-        // 2. Run SameFingerOptimizer to find beneficial key swaps.
-        // SameFingerOptimizer でSFBを最小化するキースワップを探索する。
-        let optimizer = SameFingerOptimizer()
+        // 2. Run FullErgonomicOptimizer to find beneficial relocations.
+        // FullErgonomicOptimizer で統合スコアを最大化する配置を探索する。
+        let optimizer = FullErgonomicOptimizer()
         let swaps = optimizer.optimize(
             bigramCounts: bigramCounts,
-            layout:       base.current,
+            keyCounts:    keyCounts,
+            layout:       base,
             maxSwaps:     maxSwaps
         )
         guard !swaps.isEmpty else { return nil }

@@ -4,25 +4,25 @@
 
 <div align="center">
 
+[![Website](https://img.shields.io/badge/公式サイト-Website-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://etalli.github.io/262_KeyLens/landing-page/)
+[![DMG をダウンロード](https://img.shields.io/badge/⬇_ダウンロード-DMG-blue?style=for-the-badge)](https://github.com/etalli/262_KeyLens/releases/latest)
+
 ![macOS](https://img.shields.io/badge/macOS-13%2B-brightgreen?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange?style=flat-square&logo=swift)
-[![DMG をダウンロード](https://img.shields.io/badge/⬇_ダウンロード-DMG-blue?style=flat-square)](https://github.com/etalli/262_KeyLens/releases/latest)
 [![GitHub release](https://img.shields.io/github/v/release/etalli/262_KeyLens?style=flat-square&color=blue)](https://github.com/etalli/262_KeyLens/releases/latest)
 
-**自分のタイピングを正しく理解し、キーボードのエルゴノミクスを改善する**
+**実際の打鍵データに基づき、キーボードレイアウトを最適化する。**
 
-KeyLens は、実際のタイピング動作を分析し、エルゴノミクスに基づいた改善のヒントを提供する macOS メニューバーアプリです。
+KeyLens は、あなたのタイピングの癖をローカルで分析し、あなたの手とスタイルに完璧にフィットするエルゴノミックな配列を推薦する強力な macOS ツールです。
 
-静的なテキストデータセットに基づく分析とは異なり、KeyLens はあなた自身の実際のタイピングデータからパーソナライズされた分析結果を導き出します。
+[**公式サイト（ランディングページ）を見る**](https://etalli.github.io/262_KeyLens/landing-page/) - ビジュアルツアーと最適化エンジンの詳細を確認できます。
 
 <table>
   <tr>
-    <td><img src="../images/menu_v046.png" width="280"/></td>
-    <td><img src="../images/Heatmap.png" width="400"/></td>
+    <td><img src="landing-page/hero.png" width="600" alt="KeyLens データ駆動型レイアウト最適化エンジン"/></td>
   </tr>
   <tr>
-    <td align="center">メニュー</td>
-    <td align="center">ヒートマップ</td>
+    <td align="center"><i>データ駆動型レイアウト最適化エンジン</i></td>
   </tr>
 </table>
 

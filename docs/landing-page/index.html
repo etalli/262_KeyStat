@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyLens — The Advanced Keyboard Ergonomic Engine</title>
+    <meta name="description" content="KeyLens is a powerful macOS tool for keyboard habit analysis and layout optimization. Maximize your typing comfort with data-driven insights.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="glass">
+        <div class="container nav-content">
+            <div class="logo">
+                <span class="logo-accent">Key</span>Lens
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#optimization">Optimization</a></li>
+                <li><a href="#security">Security</a></li>
+                <li><a href="https://github.com/etalli/262_KeyLens" class="btn btn-secondary">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container hero-grid">
+            <div class="hero-text">
+                <h1 class="reveal-text">Optimize Your Layout with <span class="gradient-text">Data-Driven Insights</span></h1>
+                <p class="hero-subtitle">KeyLens tracks your typing habits locally to recommend the perfect ergonomic layout tailored to your specific hands and style.</p>
+                <div class="hero-cta">
+                    <a href="https://github.com/etalli/262_KeyLens" class="btn btn-primary">Download for macOS</a>
+                    <a href="#optimization" class="btn btn-outline">Explore Features</a>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <div class="hero-glow"></div>
+                <img src="hero.png" alt="KeyLens Hero Interface" class="hero-img floating">
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features container">
+        <div class="section-title">
+            <h2>Why KeyLens?</h2>
+            <p>Elevate your typing experience through scientific analysis.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card glass">
+                <div class="feature-icon icon-blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"></path><path d="M3 5v14c0 1.1.9 2 2 2h16v-5"></path><path d="M18 12a2 2 0 000 4h4v-4h-4z"></path></svg>
+                </div>
+                <h3>Keystroke Tracking</h3>
+                <p>Monitors bigrams, trigrams, and modifier usage to build a comprehensive map of your typing behavior.</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon icon-purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"></path></svg>
+                </div>
+                <h3>Layout Simulators</h3>
+                <p>Simulate how your speed and distance metrics would change across QWERTY, Colemak, Dvorak, or custom layouts.</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon icon-cyan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+                </div>
+                <h3>Heatmap Visualization</h3>
+                <p>Stunning 2D heatmaps showing frequency by day of week and hour of day, helping you find your peak productivity.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="optimization" class="optimization glass-bg">
+        <div class="container opt-grid">
+            <div class="opt-image">
+                <div class="heatmap-demo glass">
+                    <!-- Placeholder for dynamic heatmap demo or another screenshot -->
+                    <div class="heatmap-mockup"></div>
+                </div>
+            </div>
+            <div class="opt-text">
+                <span class="badge">Phase 2: Optimization Engine</span>
+                <h2>Holistic <span class="gradient-text">Ergonomic Solver</span></h2>
+                <p>Our advanced hill-climbing algorithm maximizes your <strong>Unified Ergonomic Score</strong>. It doesn't just avoid same-finger bigrams; it optimizes for:</p>
+                <ul class="opt-list">
+                    <li><span class="check">✓</span> Hand Alternation Efficiency</li>
+                    <li><span class="check">✓</span> Finger Travel Minimization</li>
+                    <li><span class="check">✓</span> High-Strain Sequence Avoidance</li>
+                    <li><span class="check">✓</span> Intelligent Thumb Cluster Mapping</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="security" class="security container">
+        <div class="security-card glass">
+            <div class="security-content">
+                <h2>Privacy <span class="gradient-text">by Design</span></h2>
+                <p>KeyLens counts frequencies but <strong>never</strong> records the order of keys for sensitive text. All data is stored locally in an encrypted database. Zero cloud sync. Zero telemetry.</p>
+                <div class="security-features">
+                    <div class="s-feat"><span>Local Storage Only</span></div>
+                    <div class="s-feat"><span>Open Source Engine</span></div>
+                    <div class="s-feat"><span>No Keylogging</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-left">
+                <div class="logo"><span class="logo-accent">Key</span>Lens</div>
+                <p>© 2026 KeyLens Project. Open source under MIT.</p>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/etalli/262_KeyLens">Documentation</a>
+                <a href="https://github.com/etalli/262_KeyLens/releases">Releases</a>
+                <a href="https://github.com/etalli/262_KeyLens/issues">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

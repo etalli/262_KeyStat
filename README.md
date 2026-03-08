@@ -4,27 +4,25 @@ English | [日本語](docs/README.ja.md)
 
 <div align="center">
 
+[![Website](https://img.shields.io/badge/Official-Website-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://etalli.github.io/262_KeyLens/landing-page/)
+[![Download DMG](https://img.shields.io/badge/⬇_Download-DMG-blue?style=for-the-badge)](https://github.com/etalli/262_KeyLens/releases/latest)
+
 ![macOS](https://img.shields.io/badge/macOS-13%2B-brightgreen?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange?style=flat-square&logo=swift)
-[![Download DMG](https://img.shields.io/badge/⬇_Download-DMG-blue?style=flat-square)](https://github.com/etalli/262_KeyLens/releases/latest)
 [![GitHub release](https://img.shields.io/github/v/release/etalli/262_KeyLens?style=flat-square&color=blue)](https://github.com/etalli/262_KeyLens/releases/latest)
 
-**Understand how you really type and improve your keyboard ergonomics.**
+**Optimize your keyboard layout with real-world typing data.**
 
-KeyLens is a macOS menu bar app that analyzes real typing behavior
-and provides useful information for your keyboard ergonomics.
+KeyLens is a powerful macOS tool that analyzes your typing habits locally to recommend the perfect ergonomic layout tailored specifically to your hands and style.
 
-While traditional research often uses static text data sets,
-KeyLens provides helpful analysis based directly on your own typing data.
+[**Visit the Official Landing Page**](https://etalli.github.io/262_KeyLens/landing-page/) for a visual tour and deep dive into the optimization engine.
 
 <table>
   <tr>
-    <td><img src="images/menu_v046.png" width="280"/></td>
-    <td><img src="images/Heatmap.png" width="400"/></td>
+    <td><img src="docs/landing-page/hero.png" width="600"/></td>
   </tr>
   <tr>
-    <td align="center">Menu</td>
-    <td align="center">Heatmap</td>
+    <td align="center"><i>Data-driven Layout Optimization Engine</i></td>
   </tr>
 </table>
 
