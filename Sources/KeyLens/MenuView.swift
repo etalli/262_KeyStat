@@ -67,7 +67,7 @@ struct MenuView: View {
                     .foregroundColor(.primary)
                 Spacer()
                 Text(String(format: l.totalFormat, store.totalCount.formatted()))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.primary)
             }
             .font(.system(size: 13))
             .padding(.horizontal, 14)
