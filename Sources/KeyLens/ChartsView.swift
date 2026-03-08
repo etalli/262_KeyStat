@@ -920,6 +920,13 @@ struct ChartsView: View {
                 }
                 .padding(.vertical, 8)
             }
+        } else if model.isLayoutComparisonLoading {
+            HStack(spacing: 8) {
+                ProgressView().scaleEffect(0.7)
+                Text("Calculating layout comparison…")
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 60, alignment: .center)
         } else {
             Text("Need more typing data to compute layout comparison")
                 .foregroundStyle(.secondary)

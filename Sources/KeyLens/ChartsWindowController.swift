@@ -22,7 +22,8 @@ final class ChartDataModel: ObservableObject {
     @Published var dailyErgonomics:      [DailyErgonomicEntry]  = []
     @Published var weeklyDeltas:         [WeeklyDeltaRow]       = []
     // Phase 2: Before/After layout comparison (Issue #3)
-    @Published var layoutComparison:     LayoutComparison?      = nil
+    @Published var layoutComparison:          LayoutComparison? = nil
+    @Published var isLayoutComparisonLoading: Bool              = false
     // Issue #5: Activity Trends
     @Published var hourlyDistribution:   [Int]                  = []
     @Published var monthlyTotals:        [MonthlyTotalEntry]    = []
@@ -72,13 +73,20 @@ final class ChartDataModel: ObservableObject {
         // Phase 3: Weekly Delta (this 7 days vs. previous 7 days)
         weeklyDeltas = Self.computeWeeklyDeltas(ergRates: ergRates, rawDailyTotals: rawDailyTotals)
 
-        // Phase 2: Before/After layout comparison — runs SameFingerOptimizer synchronously.
-        // Typical datasets complete in <1 ms; no background thread needed.
-        // SameFingerOptimizer を同期実行。通常は 1ms 未満で完了するためメインスレッドで問題ない。
-        layoutComparison = LayoutComparison.make(
-            bigramCounts: store.allBigramCounts,
-            keyCounts:    store.allKeyCounts
-        )
+            // Phase 2: Before/After layout comparison — run FullErgonomicOptimizer on a background
+        // thread so the main thread (and Charts window) is never blocked.
+        // FullErgonomicOptimizer はバックグラウンドスレッドで実行し、メインスレッドをブロックしない。
+        layoutComparison = nil
+        isLayoutComparisonLoading = true
+        let bigramSnapshot = store.allBigramCounts
+        let keySnapshot    = store.allKeyCounts
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let result = LayoutComparison.make(bigramCounts: bigramSnapshot, keyCounts: keySnapshot)
+            DispatchQueue.main.async {
+                self?.layoutComparison = result
+                self?.isLayoutComparisonLoading = false
+            }
+        }
 
         // Issue #5: Activity Trends
         hourlyDistribution = store.hourlyDistribution()
