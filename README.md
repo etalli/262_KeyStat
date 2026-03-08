@@ -4,7 +4,7 @@ English | [日本語](docs/README.ja.md)
 
 <div align="center">
 
-[![Website](https://img.shields.io/badge/Official-Website-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://etalli.github.io/262_KeyLens/landing-page/)
+[![Website](https://img.shields.io/badge/Official-Website-blue?style=for-the-badge&logo=google-chrome&logoColor=white)](https://etalli.github.io/262_KeyLens/docs/landing-page/)
 [![Download DMG](https://img.shields.io/badge/⬇_Download-DMG-blue?style=for-the-badge)](https://github.com/etalli/262_KeyLens/releases/latest)
 
 ![macOS](https://img.shields.io/badge/macOS-13%2B-brightgreen?style=flat-square&logo=apple)
@@ -15,7 +15,7 @@ English | [日本語](docs/README.ja.md)
 
 KeyLens is a powerful macOS tool that analyzes your typing habits locally to recommend the perfect ergonomic layout tailored specifically to your hands and style.
 
-[**Visit the Official Landing Page**](https://etalli.github.io/262_KeyLens/landing-page/) for a visual tour and deep dive into the optimization engine.
+[**Visit the Official Landing Page**](https://etalli.github.io/262_KeyLens/docs/landing-page/) for a visual tour and deep dive into the optimization engine.
 
 <table>
   <tr>
