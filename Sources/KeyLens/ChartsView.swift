@@ -7,17 +7,21 @@ import KeyLensCore
 struct ChartsView: View {
     @ObservedObject var model: ChartDataModel
 
-    @AppStorage("selectedChartTab") private var selectedTab: ChartTab = .overview
+    @AppStorage("selectedChartTab") private var selectedTab: ChartTab = .summary
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            overviewTab
-                .tabItem { Label(ChartTab.overview.rawValue, systemImage: ChartTab.overview.icon) }
-                .tag(ChartTab.overview)
+            summaryTab
+                .tabItem { Label(ChartTab.summary.rawValue, systemImage: ChartTab.summary.icon) }
+                .tag(ChartTab.summary)
 
-            heatmapTab
-                .tabItem { Label(ChartTab.heatmap.rawValue, systemImage: ChartTab.heatmap.icon) }
-                .tag(ChartTab.heatmap)
+            activityTab
+                .tabItem { Label(ChartTab.activity.rawValue, systemImage: ChartTab.activity.icon) }
+                .tag(ChartTab.activity)
+
+            keyboardTab
+                .tabItem { Label(ChartTab.keyboard.rawValue, systemImage: ChartTab.keyboard.icon) }
+                .tag(ChartTab.keyboard)
 
             ergonomicsTab
                 .tabItem { Label(ChartTab.ergonomics.rawValue, systemImage: ChartTab.ergonomics.icon) }
@@ -38,40 +42,52 @@ struct ChartsView: View {
 
     // MARK: - Tabs
 
-    private var overviewTab: some View {
+    // Summary: high-level health check — intelligence, weekly report, 365-day calendar
+    private var summaryTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
                 chartSection(L10n.shared.intelligenceSection, helpText: L10n.shared.helpIntelligence) { intelligenceGroup }
-                chartSection("Top 20 Keys — All Time") { topKeysChart }
+                chartSection("Weekly Report") { weeklyDeltaSection }
+                chartSection("Activity Calendar", helpText: L10n.shared.helpActivityCalendar) { activityCalendarChart }
+            }
+            .padding(24)
+        }
+    }
+
+    // Activity: all time-series charts — volume, speed, accuracy, patterns
+    private var activityTab: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 40) {
                 chartSection("Daily Totals") { dailyTotalsChart }
                 chartSection(L10n.shared.chartTitleTypingSpeed, helpText: L10n.shared.helpTypingSpeed) { dailyWPMChart }
                 chartSection(L10n.shared.chartTitleBackspaceRate, helpText: L10n.shared.helpBackspaceRate) { dailyAccuracyChart }
-                chartSection("Activity Calendar", helpText: L10n.shared.helpActivityCalendar) { activityCalendarChart }
                 chartSection("Hourly Distribution", helpText: L10n.shared.helpHourlyDistribution) { hourlyDistributionChart }
                 chartSection("Monthly Totals") { monthlyTotalsChart }
+            }
+            .padding(24)
+        }
+    }
+
+    // Keyboard: per-key frequency analysis + heatmap
+    private var keyboardTab: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 40) {
+                chartSection("Keyboard Heatmap") { KeyboardHeatmapView(counts: model.keyCounts) }
+                chartSection("Top 20 Keys — All Time") { topKeysChart }
+                chartSection("Key Categories") { categoryChart }
                 chartSection("Top 10 Keys per Day") { perDayChart }
             }
             .padding(24)
         }
     }
 
-    private var heatmapTab: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 40) {
-                chartSection("Keyboard Heatmap") { KeyboardHeatmapView(counts: model.keyCounts) }
-                chartSection("Key Categories") { categoryChart }
-            }
-            .padding(24)
-        }
-    }
-
+    // Ergonomics: layout health — bigrams, learning curve, layout comparison
     private var ergonomicsTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
                 chartSection("Top 20 Bigrams", helpText: L10n.shared.helpBigrams) { bigramChart }
-                chartSection("Layout Comparison", helpText: L10n.shared.helpLayoutComparison) { layoutComparisonSection }
                 chartSection("Ergonomic Learning Curve", helpText: L10n.shared.helpLearningCurve) { learningCurveChart }
-                chartSection("Weekly Report") { weeklyDeltaSection }
+                chartSection("Layout Comparison", helpText: L10n.shared.helpLayoutComparison) { layoutComparisonSection }
             }
             .padding(24)
         }
