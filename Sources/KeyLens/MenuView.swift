@@ -80,6 +80,10 @@ struct MenuView: View {
             if let wpm = store.estimatedWPM {
                 infoRow(String(format: l.estimatedWPMFormat, wpm))
             }
+            // Today's backspace rate (Issue #65)
+            if let bs = store.todayBackspaceRate {
+                infoRow(String(format: l.backspaceRateFormat, bs))
+            }
 
             MiniDailyBarChart()
         }

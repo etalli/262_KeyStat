@@ -45,6 +45,7 @@ struct ChartsView: View {
                 chartSection("Top 20 Keys — All Time") { topKeysChart }
                 chartSection("Daily Totals") { dailyTotalsChart }
                 chartSection(L10n.shared.chartTitleTypingSpeed, helpText: L10n.shared.helpTypingSpeed) { dailyWPMChart }
+                chartSection(L10n.shared.chartTitleBackspaceRate, helpText: L10n.shared.helpBackspaceRate) { dailyAccuracyChart }
                 chartSection("Activity Calendar", helpText: L10n.shared.helpActivityCalendar) { activityCalendarChart }
                 chartSection("Hourly Distribution", helpText: L10n.shared.helpHourlyDistribution) { hourlyDistributionChart }
                 chartSection("Monthly Totals") { monthlyTotalsChart }
@@ -572,6 +573,47 @@ struct ChartsView: View {
                 .foregroundStyle(.orange)
                 .annotation(position: .top, spacing: 4) {
                     Text(String(format: "%.0f", item.wpm))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(height: 200)
+        }
+    }
+
+    // MARK: - Chart: Backspace Rate (Accuracy) — Issue #65
+
+    @ViewBuilder
+    private var dailyAccuracyChart: some View {
+        if model.dailyAccuracy.isEmpty {
+            emptyState
+        } else if model.dailyAccuracy.count == 1 {
+            Chart(model.dailyAccuracy) { item in
+                BarMark(x: .value("Date", item.date), y: .value("BS rate", item.rate))
+                    .foregroundStyle(.red.opacity(0.7))
+                    .cornerRadius(4)
+            }
+            .frame(height: 180)
+        } else {
+            Chart(model.dailyAccuracy) { item in
+                AreaMark(
+                    x: .value("Date", item.date),
+                    y: .value("BS rate", item.rate)
+                )
+                .foregroundStyle(.red.opacity(0.10))
+                LineMark(
+                    x: .value("Date", item.date),
+                    y: .value("BS rate", item.rate)
+                )
+                .foregroundStyle(.red.opacity(0.8))
+                .interpolationMethod(.catmullRom)
+                PointMark(
+                    x: .value("Date", item.date),
+                    y: .value("BS rate", item.rate)
+                )
+                .foregroundStyle(.red.opacity(0.8))
+                .annotation(position: .top, spacing: 4) {
+                    Text(String(format: "%.1f%%", item.rate))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

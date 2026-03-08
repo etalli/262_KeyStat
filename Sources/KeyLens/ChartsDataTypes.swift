@@ -100,6 +100,15 @@ struct MonthlyTotalEntry: Identifiable {
     init(_ t: (month: String, total: Int)) { id = t.month; month = t.month; total = t.total }
 }
 
+// MARK: - Issue #65: Daily Backspace Rate entry (for Accuracy chart)
+// 日別 BS 率エントリ（タイピング精度チャート用）
+struct DailyAccuracyEntry: Identifiable {
+    let id: String
+    let date: String
+    let rate: Double  // backspace rate (%), lower is better / 低いほど精度が高い
+    init(_ t: (date: String, rate: Double)) { id = t.date; date = t.date; rate = t.rate }
+}
+
 // MARK: - Issue #59 Phase 2: Daily WPM entry (for Typing Speed chart)
 // 日別推定 WPM エントリ（タイピング速度チャート用）
 struct DailyWPMEntry: Identifiable {

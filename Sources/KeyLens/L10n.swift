@@ -311,6 +311,21 @@ final class L10n {
         ja("速度: %.0f WPM", en: "Speed: %.0f WPM")
     }
 
+    var backspaceRateFormat: String {
+        ja("BS率: %.1f%%", en: "BS rate: %.1f%%")
+    }
+
+    var chartTitleBackspaceRate: String {
+        ja("BS 率（タイピング精度）", en: "Backspace Rate (Accuracy)")
+    }
+
+    var helpBackspaceRate: String {
+        ja(
+            "日別の BS（Backspace）率を表示します。全打鍵数に対する Delete キーの割合（%）です。\n\n低いほど入力ミスが少なく、タイピング精度が高いことを示します。一般的なタイピストは 2〜5% 程度です。\n\n過去データも利用可能（counts.json の dailyCounts から直接算出）。",
+            en: "Daily backspace rate: Delete key presses as a percentage of total keystrokes.\n\nLower is better — a lower rate means fewer typing errors. Typical typists fall in the 2–5% range.\n\nHistorical data is available immediately (derived from existing dailyCounts in counts.json)."
+        )
+    }
+
     var chartTitleTypingSpeed: String {
         ja("タイピング速度 (WPM)", en: "Typing Speed (WPM)")
     }

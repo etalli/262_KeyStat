@@ -406,6 +406,41 @@ final class KeyCountStore {
         return 60_000.0 / (ms * 5.0)
     }
 
+    /// Backspace (Delete) 率（累計）。全打鍵数に占める Delete キーの割合（%）。
+    /// Cumulative backspace rate: Delete count / total keystrokes × 100 (%).
+    var backspaceRate: Double? {
+        queue.sync {
+            let total = store.counts.values.reduce(0, +)
+            guard total > 0 else { return nil }
+            return Double(store.counts["Delete", default: 0]) / Double(total) * 100.0
+        }
+    }
+
+    /// 本日の Backspace 率（%）。
+    /// Today's backspace rate (%).
+    var todayBackspaceRate: Double? {
+        queue.sync {
+            let dayCounts = store.dailyCounts[todayKey] ?? [:]
+            let total = dayCounts.values.reduce(0, +)
+            guard total > 0 else { return nil }
+            return Double(dayCounts["Delete", default: 0]) / Double(total) * 100.0
+        }
+    }
+
+    /// 日別 Backspace 率を昇順（古い日付順）で返す。打鍵数が0の日は除外。
+    /// Returns per-day backspace rate sorted ascending. Days with zero keystrokes are excluded.
+    func dailyBackspaceRates() -> [(date: String, rate: Double)] {
+        queue.sync {
+            store.dailyCounts.compactMap { date, dayCounts -> (date: String, rate: Double)? in
+                let total = dayCounts.values.reduce(0, +)
+                guard total > 0 else { return nil }
+                let bs = dayCounts["Delete", default: 0]
+                return (date, Double(bs) / Double(total) * 100.0)
+            }
+            .sorted { $0.date < $1.date }
+        }
+    }
+
     /// 日別推定 WPM を昇順（古い日付順）で返す。蓄積データがある日のみ含む。
     /// Returns per-day estimated WPM sorted by date ascending. Only days with accumulated data are included.
     func dailyWPM() -> [(date: String, wpm: Double)] {

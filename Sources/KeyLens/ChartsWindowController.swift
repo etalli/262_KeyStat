@@ -39,6 +39,9 @@ final class ChartDataModel: ObservableObject {
     // Issue #59 Phase 2: daily WPM time-series
     // 日別 WPM 時系列（タイピング速度チャート用）
     @Published var dailyWPM:             [DailyWPMEntry]        = []
+    // Issue #65: daily backspace rate time-series
+    // 日別 BS 率時系列（タイピング精度チャート用）
+    @Published var dailyAccuracy:        [DailyAccuracyEntry]   = []
 
     func reload() {
         let store            = KeyCountStore.shared
@@ -90,6 +93,8 @@ final class ChartDataModel: ObservableObject {
         deviceErgScores = store.deviceErgonomicScores(minKeystrokes: 100).map(DeviceErgScoreEntry.init)
         // Issue #59 Phase 2: daily WPM
         dailyWPM = store.dailyWPM().map(DailyWPMEntry.init)
+        // Issue #65: daily backspace rate
+        dailyAccuracy = store.dailyBackspaceRates().map(DailyAccuracyEntry.init)
     }
 
     // Compare the most recent 7 days against the 7 days before that.
