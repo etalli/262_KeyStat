@@ -259,6 +259,18 @@ JSON is written with `.atomic` to prevent file corruption. Consecutive writes wi
 
 Accessors: `sameFingerRate`, `todaySameFingerRate`, `handAlternationRate`, `todayHandAlternationRate`, `topBigrams(limit:)`, `todayTopBigrams(limit:)`, `topHighStrainBigrams(limit:)`, `dailyErgonomicRates()`.
 
+**Typing speed (WPM) estimation:**
+
+`estimatedWPM` is derived directly from `avgIntervalMs` using the standard definition of 1 word = 5 keystrokes:
+
+```
+WPM = 60,000 / (avgIntervalMs × 5)
+```
+
+- `avgIntervalMs` is in milliseconds, so `60,000 = 60 s × 1,000 ms` converts to per-minute.
+- Only intervals ≤ 1,000 ms are included in the average (Welford online algorithm), which excludes pauses and thinking time, giving a measure of pure typing rhythm rather than net composition speed.
+- No schema change is required — WPM is computed on demand from the existing `avgIntervalMs` / `avgIntervalCount` fields.
+
 ---
 
 ### [KeyType.swift](Sources/KeyLens/KeyType.swift)

@@ -73,9 +73,12 @@ struct MenuView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
 
-            // Avg interval
+            // Avg interval + estimated WPM
             if let avgMs = store.averageIntervalMs {
                 infoRow(String(format: l.avgIntervalFormat, avgMs))
+            }
+            if let wpm = store.estimatedWPM {
+                infoRow(String(format: l.estimatedWPMFormat, wpm))
             }
 
             MiniDailyBarChart()

@@ -307,6 +307,10 @@ final class L10n {
         ja("最小間隔: %.0f ms", en: "Min interval: %.0f ms")
     }
 
+    var estimatedWPMFormat: String {
+        ja("速度: %.0f WPM", en: "Speed: %.0f WPM")
+    }
+
     var exportCSVMenuItem: String {
         ja("CSV 書き出し…", en: "Export CSV…")
     }

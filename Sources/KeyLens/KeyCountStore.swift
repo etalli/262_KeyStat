@@ -382,6 +382,13 @@ final class KeyCountStore {
         queue.sync { store.avgIntervalCount > 0 ? store.avgIntervalMs : nil }
     }
 
+    /// 推定タイピング速度（WPM）。1 word = 5 keystrokes の標準定義に基づく。
+    /// Estimated typing speed in WPM. Based on the standard definition: 1 word = 5 keystrokes.
+    var estimatedWPM: Double? {
+        guard let ms = averageIntervalMs, ms > 0 else { return nil }
+        return 60_000.0 / (ms * 5.0)
+    }
+
     /// 本日の最小入力間隔（ms, 1000ms以内のみ）。サンプルが1件以上あれば返す
     var todayMinIntervalMs: Double? {
         let key = todayKey
