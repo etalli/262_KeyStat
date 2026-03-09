@@ -19,20 +19,12 @@ KeyLens is a powerful macOS tool that analyzes your typing habits locally to rec
 
 <table>
   <tr>
-    <td><img src="images/menu_v048.png"/></td>
-  </tr>
-  <tr>
+    <td><img src="images/menu_v048.png" width="300"/></td>
     <td align="center"><i>Menu Bar</i></td>
-  </tr>
-  <tr>
-    <td><img src="images/Heatmap.png"/></td>
-  </tr>
-  <tr>
+    <td><img src="images/Heatmap.png" width="500"/></td>
     <td align="center"><i>Heatmap</i></td>
   </tr>
-
 </table>
-
 </div>
 
 ---
