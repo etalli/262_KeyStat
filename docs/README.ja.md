@@ -19,10 +19,10 @@ KeyLens は、あなたのタイピングの癖をローカルで分析し、あ
 
 <table>
   <tr>
-    <td><img src="landing-page/hero.png" width="600" alt="KeyLens データ駆動型レイアウト最適化エンジン"/></td>
-  </tr>
-  <tr>
-    <td align="center"><i>データ駆動型レイアウト最適化エンジン</i></td>
+    <td><img src="../images/menu_v048.png" width="300"/></td>
+    <td align="center"><i>メニューバー</i></td>
+    <td><img src="../images/Heatmap.png" width="500"/></td>
+    <td align="center"><i>ヒートマップ</i></td>
   </tr>
 </table>
 
