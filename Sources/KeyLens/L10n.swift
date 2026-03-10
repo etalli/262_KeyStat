@@ -621,7 +621,8 @@ final class L10n {
         case .estimatedWPM:   return ja("推定WPM", en: "Estimated WPM")
         case .backspaceRate:  return ja("BS率", en: "Backspace Rate")
         case .miniChart:      return ja("直近7日グラフ", en: "Last 7 Days Chart")
-        case .streak:         return ja("ストリーク", en: "Streak")
+        case .streak:               return ja("ストリーク", en: "Streak")
+        case .shortcutEfficiency:   return ja("ショートカット効率", en: "Shortcut Efficiency")
         }
     }
 
@@ -683,6 +684,17 @@ final class L10n {
 
     func dailyGoalLabel(_ count: Int) -> String {
         ja("\(count.formatted())打鍵/日", en: "\(count.formatted()) keys/day")
+    }
+
+    // MARK: - Shortcut Efficiency
+
+    /// Shortcut efficiency score display (e.g. "⌨️ Shortcut efficiency: 42%").
+    func shortcutEfficiencyDisplay(_ pct: Double) -> String {
+        ja("⌨️ ショートカット効率: \(Int(pct))%", en: "⌨️ Shortcut efficiency: \(Int(pct))%")
+    }
+
+    var shortcutEfficiencyNoData: String {
+        ja("⌨️ ショートカットデータなし", en: "⌨️ No shortcut data yet")
     }
 
     // MARK: - Helper

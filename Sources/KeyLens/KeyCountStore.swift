@@ -72,6 +72,9 @@ private struct CountData: Codable {
     var deviceTotalBigramCount:     [String: Int]   // deviceLabel -> cumulative total bigrams
     var deviceHandAlternationCount: [String: Int]   // deviceLabel -> cumulative hand-alternating bigrams
     var deviceHighStrainBigramCount: [String: Int]  // deviceLabel -> cumulative high-strain bigrams
+    // Daily shortcut counts (Issue #66) — "yyyy-MM-dd" -> total modifier+key combos that day
+    // 日別ショートカット数（修飾キー付き打鍵合計）
+    var dailyModifiedCount: [String: Int]
 
     enum CodingKeys: String, CodingKey {
         case startedAt, counts, dailyCounts
@@ -94,6 +97,7 @@ private struct CountData: Codable {
         case appHandAlternationCount, appHighStrainBigramCount
         case deviceSameFingerCount, deviceTotalBigramCount
         case deviceHandAlternationCount, deviceHighStrainBigramCount
+        case dailyModifiedCount
     }
 
     init(startedAt: Date, counts: [String: Int], dailyCounts: [String: [String: Int]]) {
@@ -137,6 +141,7 @@ private struct CountData: Codable {
         self.deviceTotalBigramCount = [:]
         self.deviceHandAlternationCount = [:]
         self.deviceHighStrainBigramCount = [:]
+        self.dailyModifiedCount = [:]
     }
 
     /// 旧フォーマット dailyCounts: [String: Int] からのマイグレーション
@@ -193,6 +198,8 @@ private struct CountData: Codable {
         deviceTotalBigramCount      = (try? c.decode([String: Int].self, forKey: .deviceTotalBigramCount))      ?? [:]
         deviceHandAlternationCount  = (try? c.decode([String: Int].self, forKey: .deviceHandAlternationCount))  ?? [:]
         deviceHighStrainBigramCount = (try? c.decode([String: Int].self, forKey: .deviceHighStrainBigramCount)) ?? [:]
+        // Daily modified count: default to empty when reading old JSON (backward compatible)
+        dailyModifiedCount = (try? c.decode([String: Int].self, forKey: .dailyModifiedCount)) ?? [:]
     }
 }
 
@@ -707,8 +714,24 @@ final class KeyCountStore {
 
     /// 修飾キー+キーの組み合わせカウントを1増やす
     func incrementModified(key: String) {
-        queue.sync { store.modifiedCounts[key, default: 0] += 1 }
+        queue.sync {
+            store.modifiedCounts[key, default: 0] += 1
+            store.dailyModifiedCount[todayKey, default: 0] += 1
+        }
         scheduleSave()
+    }
+
+    /// Shortcut efficiency for today: shortcuts / (shortcuts + mouse clicks), or nil if no data.
+    /// 本日のショートカット効率：ショートカット数 / (ショートカット + マウスクリック数)。データなしは nil。
+    func shortcutEfficiencyToday() -> Double? {
+        queue.sync {
+            let shortcuts = store.dailyModifiedCount[todayKey] ?? 0
+            let dayCounts = store.dailyCounts[todayKey] ?? [:]
+            let mouseClicks = dayCounts.filter { $0.key.hasPrefix("🖱") }.values.reduce(0, +)
+            let total = shortcuts + mouseClicks
+            guard total > 0 else { return nil }
+            return Double(shortcuts) / Double(total) * 100.0
+        }
     }
 
     /// 修飾キー付きコンボの上位 limit 件を返す。prefix 指定で前方一致フィルタ

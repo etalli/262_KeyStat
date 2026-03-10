@@ -100,6 +100,12 @@ struct MenuView: View {
                             infoRow(l.goalProgress(today: today, goal: goal))
                         }
                     }
+                case .shortcutEfficiency:
+                    if let pct = KeyCountStore.shared.shortcutEfficiencyToday() {
+                        infoRow(l.shortcutEfficiencyDisplay(pct))
+                    } else {
+                        infoRow(l.shortcutEfficiencyNoData)
+                    }
                 }
             }
         }
