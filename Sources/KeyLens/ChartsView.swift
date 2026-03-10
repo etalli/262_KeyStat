@@ -8,6 +8,7 @@ struct ChartsView: View {
     @ObservedObject var model: ChartDataModel
 
     @AppStorage("selectedChartTab") private var selectedTab: ChartTab = .summary
+    @AppStorage("frequentChartsSortDescending") private var sortDescending: Bool = true
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -73,9 +74,9 @@ struct ChartsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
                 chartSection("Keyboard Heatmap") { KeyboardHeatmapView(counts: model.keyCounts) }
-                chartSection("Top 20 Keys — All Time") { topKeysChart }
+                chartSection("Top 20 Keys — All Time", showSort: true) { topKeysChart }
                 chartSection("Key Categories") { categoryChart }
-                chartSection("Top 10 Keys per Day") { perDayChart }
+                chartSection("Top 10 Keys per Day", showSort: true) { perDayChart }
             }
             .padding(24)
         }
@@ -85,7 +86,7 @@ struct ChartsView: View {
     private var ergonomicsTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection("Top 20 Bigrams", helpText: L10n.shared.helpBigrams) { bigramChart }
+                chartSection("Top 20 Bigrams", helpText: L10n.shared.helpBigrams, showSort: true) { bigramChart }
                 chartSection("Ergonomic Learning Curve", helpText: L10n.shared.helpLearningCurve) { learningCurveChart }
                 chartSection("Layout Comparison", helpText: L10n.shared.helpLayoutComparison) { layoutComparisonSection }
             }
@@ -96,8 +97,8 @@ struct ChartsView: View {
     private var shortcutsTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection("⌘ Keyboard Shortcuts") { shortcutsChart }
-                chartSection("All Keyboard Combos") { allCombosChart }
+                chartSection("⌘ Keyboard Shortcuts", showSort: true) { shortcutsChart }
+                chartSection("All Keyboard Combos", showSort: true) { allCombosChart }
             }
             .padding(24)
         }
@@ -106,15 +107,15 @@ struct ChartsView: View {
     private var appsTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection(L10n.shared.appsAllTime, helpText: L10n.shared.helpApps) { topAppsChart }
-                chartSection(L10n.shared.appsToday) { todayTopAppsChart }
+                chartSection(L10n.shared.appsAllTime, helpText: L10n.shared.helpApps, showSort: true) { topAppsChart }
+                chartSection(L10n.shared.appsToday, showSort: true) { todayTopAppsChart }
                 if !model.appErgScores.isEmpty {
                     chartSection(L10n.shared.appErgScoreSection, helpText: L10n.shared.helpAppErgScore) {
                         appErgScoreTable
                     }
                 }
-                chartSection(L10n.shared.devicesAllTime, helpText: L10n.shared.helpDevices) { topDevicesChart }
-                chartSection(L10n.shared.devicesToday) { todayTopDevicesChart }
+                chartSection(L10n.shared.devicesAllTime, helpText: L10n.shared.helpDevices, showSort: true) { topDevicesChart }
+                chartSection(L10n.shared.devicesToday, showSort: true) { todayTopDevicesChart }
                 if !model.deviceErgScores.isEmpty {
                     chartSection(L10n.shared.deviceErgScoreSection, helpText: L10n.shared.helpDeviceErgScore) {
                         deviceErgScoreTable
@@ -242,12 +243,26 @@ struct ChartsView: View {
     // MARK: - Section wrapper
 
     @ViewBuilder
-    private func chartSection<C: View>(_ title: String, helpText: String? = nil, @ViewBuilder content: () -> C) -> some View {
+    private func chartSection<C: View>(_ title: String, helpText: String? = nil, showSort: Bool = false, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let helpText {
-                SectionHeader(title: title, helpText: helpText)
-            } else {
-                Text(title).font(.headline)
+            HStack {
+                if let helpText {
+                    SectionHeader(title: title, helpText: helpText)
+                } else {
+                    Text(title).font(.headline)
+                }
+                
+                if showSort {
+                    Spacer()
+                    Picker("", selection: $sortDescending) {
+                        Image(systemName: "arrow.down.square").tag(true)
+                            .help("Descending (Most frequent first)")
+                        Image(systemName: "arrow.up.square").tag(false)
+                            .help("Ascending (Least frequent first)")
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 80)
+                }
             }
             content()
         }
@@ -326,6 +341,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let keyOrder = model.topKeys.map(\.key)
+            let domain = sortDescending ? Array(keyOrder.reversed()) : keyOrder
+            
             VStack(alignment: .leading, spacing: 6) {
                 Chart(model.topKeys) { item in
                     BarMark(
@@ -335,7 +352,7 @@ struct ChartsView: View {
                     .foregroundStyle(KeyType.classify(item.key).color)
                     .cornerRadius(3)
                 }
-                .chartYScale(domain: keyOrder.reversed())
+                .chartYScale(domain: domain)
                 .chartLegend(.hidden)
                 .frame(height: CGFloat(model.topKeys.count * 26 + 24))
 
@@ -363,6 +380,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let appOrder = model.topApps.map(\.app)
+            let domain = sortDescending ? Array(appOrder.reversed()) : appOrder
+            
             Chart(model.topApps) { item in
                 BarMark(
                     x: .value("Count", item.count),
@@ -376,7 +395,7 @@ struct ChartsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .chartYScale(domain: appOrder.reversed())
+            .chartYScale(domain: domain)
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.topApps.count * 28 + 24))
         }
@@ -388,6 +407,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let appOrder = model.todayTopApps.map(\.app)
+            let domain = sortDescending ? Array(appOrder.reversed()) : appOrder
+            
             Chart(model.todayTopApps) { item in
                 BarMark(
                     x: .value("Count", item.count),
@@ -401,7 +422,7 @@ struct ChartsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .chartYScale(domain: appOrder.reversed())
+            .chartYScale(domain: domain)
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.todayTopApps.count * 28 + 24))
         }
@@ -413,6 +434,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let deviceOrder = model.topDevices.map(\.device)
+            let domain = sortDescending ? Array(deviceOrder.reversed()) : deviceOrder
+            
             Chart(model.topDevices) { item in
                 BarMark(
                     x: .value("Count", item.count),
@@ -426,7 +449,7 @@ struct ChartsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .chartYScale(domain: deviceOrder.reversed())
+            .chartYScale(domain: domain)
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.topDevices.count * 28 + 24))
         }
@@ -438,6 +461,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let deviceOrder = model.todayTopDevices.map(\.device)
+            let domain = sortDescending ? Array(deviceOrder.reversed()) : deviceOrder
+            
             Chart(model.todayTopDevices) { item in
                 BarMark(
                     x: .value("Count", item.count),
@@ -451,7 +476,7 @@ struct ChartsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .chartYScale(domain: deviceOrder.reversed())
+            .chartYScale(domain: domain)
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.todayTopDevices.count * 28 + 24))
         }
@@ -466,6 +491,8 @@ struct ChartsView: View {
                 emptyState
             } else {
                 let pairOrder = model.topBigrams.map(\.pair)
+                let domain = sortDescending ? Array(pairOrder.reversed()) : pairOrder
+                
                 Chart(model.topBigrams) { item in
                     BarMark(
                         x: .value("Count", item.count),
@@ -474,7 +501,7 @@ struct ChartsView: View {
                     .foregroundStyle(Color.teal.opacity(0.8))
                     .cornerRadius(3)
                 }
-                .chartYScale(domain: pairOrder.reversed())
+                .chartYScale(domain: domain)
                 .chartLegend(.hidden)
                 .frame(height: CGFloat(model.topBigrams.count * 26 + 24))
             }
@@ -719,6 +746,7 @@ struct ChartsView: View {
                 .reduce(into: [String: Int]()) { $0[$1.key, default: 0] += $1.count }
                 .sorted { $0.value > $1.value }
                 .map(\.key)
+            let domain = sortDescending ? keyOrder : Array(keyOrder.reversed())
 
             Chart(model.perDayKeys) { item in
                 BarMark(
@@ -729,7 +757,7 @@ struct ChartsView: View {
                 .position(by: .value("Date", item.date))
                 .cornerRadius(3)
             }
-            .chartXScale(domain: keyOrder)
+            .chartXScale(domain: domain)
             .chartLegend(position: .top, alignment: .leading)
             .frame(height: 220)
         }
@@ -743,6 +771,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let keyOrder = model.shortcuts.map(\.key)
+            let domain = sortDescending ? Array(keyOrder.reversed()) : keyOrder
+            
             Chart(model.shortcuts) { item in
                 BarMark(
                     x: .value("Count", item.count),
@@ -756,7 +786,7 @@ struct ChartsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .chartYScale(domain: keyOrder.reversed())
+            .chartYScale(domain: domain)
             .chartLegend(.hidden)
             .frame(height: CGFloat(model.shortcuts.count * 26 + 24))
         }
@@ -780,6 +810,8 @@ struct ChartsView: View {
             emptyState
         } else {
             let keyOrder = model.allCombos.map(\.key)
+            let domain = sortDescending ? Array(keyOrder.reversed()) : keyOrder
+            
             VStack(alignment: .leading, spacing: 6) {
                 Chart(model.allCombos) { item in
                     BarMark(
@@ -794,7 +826,7 @@ struct ChartsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                .chartYScale(domain: keyOrder.reversed())
+                .chartYScale(domain: domain)
                 .chartLegend(.hidden)
                 .frame(height: CGFloat(model.allCombos.count * 26 + 24))
 
