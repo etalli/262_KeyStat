@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import KeyLensCore
+import UserNotifications
 
 // MARK: - Data model
 
@@ -388,6 +389,9 @@ final class KeyCountStore {
             }
             lastKeyName = key
 
+            // Daily goal notification check (Issue #69)
+            checkGoalNotificationLocked(todayStr: today)
+
             return store.counts[key, default: 0]
         }
         scheduleSave()
@@ -721,6 +725,72 @@ final class KeyCountStore {
     /// 本日（ローカル時刻）のキー入力合計
     var todayCount: Int {
         queue.sync { store.dailyCounts[todayKey]?.values.reduce(0, +) ?? 0 }
+    }
+
+    // MARK: - Daily Goal & Streak
+
+    private static let dailyGoalKey    = "dailyGoalCount"
+    private static let goalNotifiedKey = "goalNotifiedDate"
+
+    /// Daily keystroke goal. 0 = off. Persisted in UserDefaults.
+    /// 1日の目標打鍵数。0 = オフ。UserDefaults に永続化。
+    var dailyGoal: Int {
+        get { UserDefaults.standard.integer(forKey: Self.dailyGoalKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.dailyGoalKey) }
+    }
+
+    /// Inner streak calculation — must be called inside queue.sync.
+    /// queue.sync 内部から呼ぶ前提の内部メソッド。
+    private func streakLocked(goal: Int) -> Int {
+        var streak = 0
+        let cal = Calendar.current
+        var date = Date()
+        for _ in 0..<365 {
+            let key = Self.dayFormatter.string(from: date)
+            let count = store.dailyCounts[key]?.values.reduce(0, +) ?? 0
+            if count >= goal {
+                streak += 1
+                guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
+                date = prev
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
+    /// Current streak: consecutive days (including today if goal met) where daily total >= dailyGoal.
+    /// 目標達成した連続日数（今日を含む）。dailyGoal == 0 の場合は 0。
+    func currentStreak() -> Int {
+        let goal = dailyGoal
+        guard goal > 0 else { return 0 }
+        return queue.sync { streakLocked(goal: goal) }
+    }
+
+    /// Check if today's goal was just crossed and fire a one-per-day notification if so.
+    /// Called inside queue.sync from increment().
+    /// 今日初めて目標を超えた場合に通知を発火する（increment() 内から呼ぶ）。
+    private func checkGoalNotificationLocked(todayStr: String) {
+        let goal = dailyGoal
+        guard goal > 0 else { return }
+        let notified = UserDefaults.standard.string(forKey: Self.goalNotifiedKey)
+        guard notified != todayStr else { return }
+        let todayTotal = store.dailyCounts[todayStr]?.values.reduce(0, +) ?? 0
+        guard todayTotal >= goal else { return }
+        UserDefaults.standard.set(todayStr, forKey: Self.goalNotifiedKey)
+        let streak = streakLocked(goal: goal)
+        DispatchQueue.main.async {
+            let content = UNMutableNotificationContent()
+            content.title = L10n.shared.goalReachedTitle
+            content.body  = L10n.shared.goalReachedBody(streak: streak)
+            content.sound = .default
+            let req = UNNotificationRequest(
+                identifier: "com.keylens.goalReached",
+                content: content,
+                trigger: nil
+            )
+            UNUserNotificationCenter.current().add(req) { _ in }
+        }
     }
 
     /// Returns per-day keystroke totals for the last N calendar days (oldest first).

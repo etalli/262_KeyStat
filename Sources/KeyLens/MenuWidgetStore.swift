@@ -12,6 +12,7 @@ enum MenuWidget: String, CaseIterable, Identifiable {
     case estimatedWPM   = "estimatedWPM"
     case backspaceRate  = "backspaceRate"
     case miniChart      = "miniChart"
+    case streak         = "streak"
 
     var id: String { rawValue }
 

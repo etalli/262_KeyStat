@@ -90,6 +90,16 @@ struct MenuView: View {
                     }
                 case .miniChart:
                     MiniDailyBarChart()
+                case .streak:
+                    let goal   = KeyCountStore.shared.dailyGoal
+                    let streak = KeyCountStore.shared.currentStreak()
+                    let today  = KeyCountStore.shared.todayCount
+                    VStack(alignment: .leading, spacing: 0) {
+                        infoRow(l.streakDisplay(streak))
+                        if goal > 0 {
+                            infoRow(l.goalProgress(today: today, goal: goal))
+                        }
+                    }
                 }
             }
         }
@@ -382,6 +392,17 @@ private struct SettingsMenuRow: View {
                 brm.intervalMinutes = mins
                 brm.isEnabled = true
             }
+        }
+
+        menu.addItem(.separator())
+
+        // Daily Keystroke Goal (Issue #69)
+        // 1日の目標打鍵数
+        header(l.dailyGoalMenuTitle)
+        let ks = KeyCountStore.shared
+        add(l.dailyGoalOff, checked: ks.dailyGoal == 0) { ks.dailyGoal = 0 }
+        for count in [1000, 3000, 5000, 10000] {
+            add(l.dailyGoalLabel(count), checked: ks.dailyGoal == count) { ks.dailyGoal = count }
         }
 
         guard let event = NSApp.currentEvent else { return }

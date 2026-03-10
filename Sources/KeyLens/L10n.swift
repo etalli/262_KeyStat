@@ -621,6 +621,7 @@ final class L10n {
         case .estimatedWPM:   return ja("推定WPM", en: "Estimated WPM")
         case .backspaceRate:  return ja("BS率", en: "Backspace Rate")
         case .miniChart:      return ja("直近7日グラフ", en: "Last 7 Days Chart")
+        case .streak:         return ja("ストリーク", en: "Streak")
         }
     }
 
@@ -645,6 +646,43 @@ final class L10n {
 
     var breakReminderOff: String {
         ja("オフ", en: "Off")
+    }
+
+    // MARK: - Streak & Daily Goal
+
+    /// Streak display string. n=0 shows a "no streak" placeholder.
+    func streakDisplay(_ n: Int) -> String {
+        n > 0
+            ? ja("🔥 \(n)日連続達成中", en: "🔥 \(n)-day streak")
+            : ja("🔥 ストリークなし", en: "🔥 No streak yet")
+    }
+
+    /// Today's progress toward the daily goal as a formatted string.
+    func goalProgress(today: Int, goal: Int) -> String {
+        let pct = goal > 0 ? min(100, today * 100 / goal) : 0
+        return ja("今日: \(today.formatted()) / \(goal.formatted()) (\(pct)%)",
+                  en: "Today: \(today.formatted()) / \(goal.formatted()) (\(pct)%)")
+    }
+
+    var goalReachedTitle: String {
+        ja("🎉 目標達成！", en: "🎉 Daily goal reached!")
+    }
+
+    func goalReachedBody(streak: Int) -> String {
+        ja("今日の打鍵目標を達成しました。\(streak)日連続達成！",
+           en: "You've hit today's keystroke goal — \(streak)-day streak!")
+    }
+
+    var dailyGoalMenuTitle: String {
+        ja("1日の目標打鍵数", en: "Daily Keystroke Goal")
+    }
+
+    var dailyGoalOff: String {
+        ja("オフ", en: "Off")
+    }
+
+    func dailyGoalLabel(_ count: Int) -> String {
+        ja("\(count.formatted())打鍵/日", en: "\(count.formatted()) keys/day")
     }
 
     // MARK: - Helper
