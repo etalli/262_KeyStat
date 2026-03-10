@@ -146,8 +146,27 @@ final class MouseStore {
     }
 
     /// Synchronous flush — call on app termination to avoid data loss.
-    /// 同期フラッシュ — データ損失を防ぐためアプリ終了時に呼ぶ。
     func flushSync() {
         queue.sync { flushLocked() }
+    }
+
+    // MARK: - Queries
+
+    /// Total mouse travel distance for today in points (screen coordinates).
+    /// Returns nil if no data has been recorded yet.
+    /// Includes in-memory pending distance not yet flushed to disk.
+    func distanceToday() -> Double? {
+        queue.sync {
+            let dateStr = Self.dayFormatter.string(from: Date())
+            var stored: Double = 0
+            if let db = dbQueue {
+                stored = (try? db.read { db in
+                    try Double.fetchOne(db, sql: "SELECT distance_pts FROM mouse_daily WHERE date = ?",
+                                        arguments: [dateStr])
+                }) ?? 0
+            }
+            let total = stored + pendingDistance
+            return total > 0 ? total : nil
+        }
     }
 }

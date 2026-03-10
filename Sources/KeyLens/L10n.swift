@@ -623,6 +623,7 @@ final class L10n {
         case .miniChart:      return ja("直近7日グラフ", en: "Last 7 Days Chart")
         case .streak:               return ja("ストリーク", en: "Streak")
         case .shortcutEfficiency:   return ja("ショートカット効率", en: "Shortcut Efficiency")
+        case .mouseDistance:        return ja("マウス移動距離", en: "Mouse Distance")
         }
     }
 
@@ -695,6 +696,26 @@ final class L10n {
 
     var shortcutEfficiencyNoData: String {
         ja("⌨️ ショートカットデータなし", en: "⌨️ No shortcut data yet")
+    }
+
+    // MARK: - Mouse Distance
+
+    /// Mouse distance display string. Points are converted to km or m.
+    func mouseDistanceDisplay(_ pts: Double) -> String {
+        // 1 screen point ≈ 0.264 mm at 96 dpi baseline
+        let meters = pts * 0.000264
+        if meters >= 1000 {
+            let km = meters / 1000
+            return ja(String(format: "🖱 移動距離: %.2f km", km),
+                      en: String(format: "🖱 Distance: %.2f km", km))
+        } else {
+            return ja(String(format: "🖱 移動距離: %.0f m", meters),
+                      en: String(format: "🖱 Distance: %.0f m", meters))
+        }
+    }
+
+    var mouseDistanceNoData: String {
+        ja("🖱 移動距離データなし", en: "🖱 No mouse distance data yet")
     }
 
     // MARK: - Helper

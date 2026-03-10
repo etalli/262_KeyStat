@@ -106,6 +106,12 @@ struct MenuView: View {
                     } else {
                         infoRow(l.shortcutEfficiencyNoData)
                     }
+                case .mouseDistance:
+                    if let pts = MouseStore.shared.distanceToday() {
+                        infoRow(l.mouseDistanceDisplay(pts))
+                    } else {
+                        infoRow(l.mouseDistanceNoData)
+                    }
                 }
             }
         }
