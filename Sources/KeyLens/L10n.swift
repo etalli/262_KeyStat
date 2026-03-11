@@ -704,12 +704,12 @@ final class L10n {
     /// Mouse distance display string. Shows raw screen points and physical distance.
     /// Physical distance uses NSScreen.main for accuracy, falling back to 96 dpi baseline.
     func mouseDistanceDisplay(_ pts: Double) -> String {
-        // Derive mm/pt from actual screen geometry; fall back to 96 dpi baseline (0.264 mm/pt)
+        // Derive mm/pt from screen DPI; fall back to 96 dpi baseline (0.264 mm/pt)
         let mmPerPt: Double
-        if let screen = NSScreen.main {
-            let physicalMM = screen.physicalSize.height
-            let pointHeight = screen.frame.height
-            mmPerPt = (physicalMM > 0 && pointHeight > 0) ? physicalMM / pointHeight : 0.264
+        if let screen = NSScreen.main,
+           let res = screen.deviceDescription[NSDeviceDescriptionKey("NSDeviceResolution")] as? NSSize,
+           res.width > 0 {
+            mmPerPt = 25.4 / res.width  // 25.4 mm per inch / dpi
         } else {
             mmPerPt = 0.264
         }
@@ -730,6 +730,21 @@ final class L10n {
 
     var mouseDistanceNoData: String {
         ja("🖱 移動距離データなし", en: "🖱 No mouse distance data yet")
+    }
+
+    // MARK: - Chart Theme
+
+    var chartThemeMenuTitle: String { ja("チャートテーマ", en: "Chart Theme") }
+
+    func chartThemeDisplayName(_ theme: ChartTheme) -> String {
+        switch theme {
+        case .blue:   return ja("ブルー", en: "Blue")
+        case .teal:   return ja("ティール", en: "Teal")
+        case .purple: return ja("パープル", en: "Purple")
+        case .orange: return ja("オレンジ", en: "Orange")
+        case .green:  return ja("グリーン", en: "Green")
+        case .pink:   return ja("ピンク", en: "Pink")
+        }
     }
 
     // MARK: - Helper

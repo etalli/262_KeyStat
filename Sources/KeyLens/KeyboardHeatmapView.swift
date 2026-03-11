@@ -45,6 +45,7 @@ struct KeyboardHeatmapView: View {
     @State private var showStrainLegendHelp: Bool = false
     @State private var copyConfirmed = false
     @AppStorage("heatmapTemplate") private var template: HeatmapTemplate = .ansi
+    @ObservedObject private var theme = ThemeStore.shared
     @Environment(\.colorScheme) private var colorScheme
 
     // Adapts to dark / light mode — dark: near-black, light: near-white
@@ -508,7 +509,8 @@ struct HeatmapExportView: View {
         tooltipStyle: HeatmapTooltipStyle
     ) -> some View {
         let t = max > 0 && count > 0 ? Double(count) / Double(max) : 0
-        let hue = (1.0 - t) * 0.67
+        let baseHue = ThemeStore.shared.current.heatmapBaseHue
+        let hue = (1.0 - t) * baseHue
         let bgColor = count > 0 ? Color(hue: hue, saturation: 0.75, brightness: 0.82) : emptyKeyColor
         let fgColor: Color = count > 0 ? .white : .secondary
 
@@ -566,13 +568,16 @@ struct HeatmapExportView: View {
         return HStack(spacing: 6) {
             Text(lowLabel).font(.caption2).foregroundStyle(.secondary)
             LinearGradient(
-                stops: [
-                    .init(color: emptyKeyColor, location: 0.00),
-                    .init(color: Color(hue: 0.67, saturation: 0.75, brightness: 0.82), location: 0.15),
-                    .init(color: Color(hue: 0.40, saturation: 0.75, brightness: 0.82), location: 0.45),
-                    .init(color: Color(hue: 0.15, saturation: 0.75, brightness: 0.82), location: 0.75),
-                    .init(color: Color(hue: 0.00, saturation: 0.75, brightness: 0.82), location: 1.00),
-                ],
+                stops: {
+                    let h = ThemeStore.shared.current.heatmapBaseHue
+                    return [
+                        .init(color: emptyKeyColor, location: 0.00),
+                        .init(color: Color(hue: h,            saturation: 0.75, brightness: 0.82), location: 0.15),
+                        .init(color: Color(hue: h * 0.60,     saturation: 0.75, brightness: 0.82), location: 0.45),
+                        .init(color: Color(hue: h * 0.22,     saturation: 0.75, brightness: 0.82), location: 0.75),
+                        .init(color: Color(hue: 0.00,          saturation: 0.75, brightness: 0.82), location: 1.00),
+                    ]
+                }(),
                 startPoint: .leading,
                 endPoint: .trailing
             )

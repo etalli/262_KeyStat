@@ -6,6 +6,7 @@ import KeyLensCore
 
 struct ChartsView: View {
     @ObservedObject var model: ChartDataModel
+    @ObservedObject private var theme = ThemeStore.shared
 
     @AppStorage("selectedChartTab") private var selectedTab: ChartTab = .summary
     @AppStorage("frequentChartsSortDescending") private var sortDescending: Bool = true
@@ -277,7 +278,7 @@ struct ChartsView: View {
                 title: L10n.shared.inferredStyle,
                 value: L10n.shared.typingStyleLabel(KeyCountStore.shared.currentTypingStyle),
                 icon: styleIcon(KeyCountStore.shared.currentTypingStyle),
-                color: .blue
+                color: theme.accentColor
             )
 
             intelligenceCard(
@@ -551,7 +552,7 @@ struct ChartsView: View {
             // 1点のみの場合は BarMark で代替
             Chart(model.dailyTotals) { item in
                 BarMark(x: .value("Date", item.date), y: .value("Total", item.total))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(theme.accentColor)
                     .cornerRadius(4)
             }
             .frame(height: 180)
@@ -561,18 +562,18 @@ struct ChartsView: View {
                     x: .value("Date", item.date),
                     y: .value("Total", item.total)
                 )
-                .foregroundStyle(.blue.opacity(0.12))
+                .foregroundStyle(theme.accentColor.opacity(0.12))
                 LineMark(
                     x: .value("Date", item.date),
                     y: .value("Total", item.total)
                 )
-                .foregroundStyle(.blue)
+                .foregroundStyle(theme.accentColor)
                 .interpolationMethod(.catmullRom)
                 PointMark(
                     x: .value("Date", item.date),
                     y: .value("Total", item.total)
                 )
-                .foregroundStyle(.blue)
+                .foregroundStyle(theme.accentColor)
                 .annotation(position: .top, spacing: 4) {
                     Text(item.total.formatted())
                         .font(.caption)

@@ -417,6 +417,17 @@ private struct SettingsMenuRow: View {
             add(l.dailyGoalLabel(count), checked: ks.dailyGoal == count) { ks.dailyGoal = count }
         }
 
+        menu.addItem(.separator())
+
+        // Chart Theme
+        header(l.chartThemeMenuTitle)
+        let currentTheme = ThemeStore.shared.current
+        for theme in ChartTheme.allCases {
+            add(theme.displayName, checked: currentTheme == theme) {
+                ThemeStore.shared.current = theme
+            }
+        }
+
         guard let event = NSApp.currentEvent else { return }
         withExtendedLifetime(held) {
             NSMenu.popUpContextMenu(menu, with: event, for: event.window?.contentView ?? NSView())
