@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import KeyLensCore
 
@@ -700,18 +701,31 @@ final class L10n {
 
     // MARK: - Mouse Distance
 
-    /// Mouse distance display string. Points are converted to km or m.
+    /// Mouse distance display string. Shows raw screen points and physical distance.
+    /// Physical distance uses NSScreen.main for accuracy, falling back to 96 dpi baseline.
     func mouseDistanceDisplay(_ pts: Double) -> String {
-        // 1 screen point ≈ 0.264 mm at 96 dpi baseline
-        let meters = pts * 0.000264
-        if meters >= 1000 {
-            let km = meters / 1000
-            return ja(String(format: "🖱 移動距離: %.2f km", km),
-                      en: String(format: "🖱 Distance: %.2f km", km))
+        // Derive mm/pt from actual screen geometry; fall back to 96 dpi baseline (0.264 mm/pt)
+        let mmPerPt: Double
+        if let screen = NSScreen.main {
+            let physicalMM = screen.physicalSize.height
+            let pointHeight = screen.frame.height
+            mmPerPt = (physicalMM > 0 && pointHeight > 0) ? physicalMM / pointHeight : 0.264
         } else {
-            return ja(String(format: "🖱 移動距離: %.0f m", meters),
-                      en: String(format: "🖱 Distance: %.0f m", meters))
+            mmPerPt = 0.264
         }
+
+        let meters = pts * mmPerPt / 1000.0
+        let pxFormatted = NumberFormatter.localizedString(from: NSNumber(value: Int(pts)), number: .decimal)
+
+        let distStr: String
+        if meters >= 1000 {
+            distStr = String(format: "%.2f km", meters / 1000)
+        } else {
+            distStr = String(format: "%.0f m", meters)
+        }
+
+        return ja("🖱 移動距離: \(pxFormatted) px (\(distStr))",
+                  en: "🖱 Travel: \(pxFormatted) px (\(distStr))")
     }
 
     var mouseDistanceNoData: String {
