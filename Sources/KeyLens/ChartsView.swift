@@ -291,17 +291,39 @@ struct ChartsView: View {
         }
     }
 
-    /// Snapshots the actual on-screen NSView for `title` and writes it to NSPasteboard.
+    /// Captures the composited on-screen pixels for `title`'s section and writes to NSPasteboard.
+    /// Uses CGWindowListCreateImage so Metal-rendered SwiftUI Charts are captured correctly.
     private func snapshotToClipboard(title: String) {
         guard let snapper = snapperStore.views[title],
-              let target = snapper.superview else { return }
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        guard let rep = target.bitmapImageRepForCachingDisplay(in: target.bounds) else { return }
-        target.cacheDisplay(in: target.bounds, to: rep)
-        let img = NSImage(size: NSSize(width: target.bounds.width * scale,
-                                       height: target.bounds.height * scale))
-        rep.size = img.size
-        img.addRepresentation(rep)
+              let target = snapper.superview,
+              let window = target.window else { return }
+
+        let scale = window.backingScaleFactor
+
+        // View rect → screen coordinates (AppKit: bottom-left origin)
+        let viewInWindow  = target.convert(target.bounds, to: nil)
+        let viewOnScreen  = window.convertToScreen(viewInWindow)
+        let windowOnScreen = window.frame
+
+        // Capture the full window as CGImage (pixels, top-left CG origin)
+        guard let windowImage = CGWindowListCreateImage(
+            .null,
+            .optionIncludingWindow,
+            CGWindowID(window.windowNumber),
+            [.bestResolution, .boundsIgnoreFraming]
+        ) else { return }
+
+        // Map view rect into CGImage coordinates (top-left origin, pixels)
+        let cropRect = CGRect(
+            x: (viewOnScreen.minX - windowOnScreen.minX) * scale,
+            y: (windowOnScreen.maxY - viewOnScreen.maxY) * scale,
+            width:  viewOnScreen.width  * scale,
+            height: viewOnScreen.height * scale
+        )
+        guard let cropped = windowImage.cropping(to: cropRect) else { return }
+
+        let img = NSImage(cgImage: cropped,
+                          size: NSSize(width: viewOnScreen.width, height: viewOnScreen.height))
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([img])
         copiedSection = title
