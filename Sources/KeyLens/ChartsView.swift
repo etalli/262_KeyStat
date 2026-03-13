@@ -11,6 +11,9 @@ struct ChartsView: View {
     @AppStorage("selectedChartTab") private var selectedTab: ChartTab = .summary
     @AppStorage("frequentChartsSortDescending") private var sortDescending: Bool = true
 
+    /// Title of the section whose clipboard copy just succeeded (cleared after 1.5 s).
+    @State private var copiedSection: String? = nil
+
     var body: some View {
         TabView(selection: $selectedTab) {
             summaryTab
@@ -246,16 +249,19 @@ struct ChartsView: View {
 
     @ViewBuilder
     private func chartSection<C: View>(_ title: String, helpText: String? = nil, showSort: Bool = false, @ViewBuilder content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let contentView = AnyView(content())
+        let isCopied = copiedSection == title
+        return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 if let helpText {
                     SectionHeader(title: title, helpText: helpText)
                 } else {
                     Text(title).font(.headline)
                 }
-                
+
+                Spacer()
+
                 if showSort {
-                    Spacer()
                     Picker("", selection: $sortDescending) {
                         Image(systemName: "arrow.down.square").tag(true)
                             .help("Descending (Most frequent first)")
@@ -265,8 +271,39 @@ struct ChartsView: View {
                     .pickerStyle(.segmented)
                     .frame(width: 80)
                 }
+
+                // Copy to clipboard button
+                Button {
+                    copyChartToClipboard(title: title, view: contentView)
+                } label: {
+                    Image(systemName: isCopied ? "checkmark" : "clipboard")
+                        .font(.caption)
+                        .foregroundStyle(isCopied ? .green : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Copy chart as image")
+                .animation(.easeInOut(duration: 0.2), value: isCopied)
             }
-            content()
+            contentView
+        }
+    }
+
+    /// Renders `view` to a PNG via ImageRenderer and writes it to NSPasteboard.
+    private func copyChartToClipboard<V: View>(title: String, view: V) {
+        let renderer = ImageRenderer(content:
+            view
+                .padding(12)
+                .background(Color(NSColor.windowBackgroundColor))
+        )
+        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        guard let nsImage = renderer.nsImage else { return }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([nsImage])
+
+        copiedSection = title
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            if copiedSection == title { copiedSection = nil }
         }
     }
 
