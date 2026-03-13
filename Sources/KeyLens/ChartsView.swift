@@ -1159,7 +1159,7 @@ struct ChartsView: View {
     /// Set to true to show the actual key label above each IKI bar.
     /// WARNING: enabling this exposes keystrokes (including passwords) visually.
     /// Set to false (default) to hide key names for privacy.
-    private let ikichartShowKeyLabels = true
+    private let ikichartShowKeyLabels = false
 
     /// Bar chart of IKI (ms) for the last 20 keystrokes. Bars are color-coded by speed.
     /// 直近20打鍵のIKI棒グラフ。速度に応じて色分けする。
