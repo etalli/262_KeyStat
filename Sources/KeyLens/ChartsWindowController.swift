@@ -112,7 +112,7 @@ final class ChartDataModel: ObservableObject {
     func refreshLiveData() {
         let raw = KeyCountStore.shared.latestIKIs()
         recentIKIEntries = raw.enumerated().map { i, item in
-            RecentIKIEntry(id: i, iki: item.iki)
+            RecentIKIEntry(id: i, key: item.key, iki: item.iki)
         }
     }
 

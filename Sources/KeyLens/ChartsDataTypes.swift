@@ -133,6 +133,7 @@ struct DailyErgonomicEntry: Identifiable {
 /// リアルタイムIKIバーチャートの1エントリ：直近打鍵のキー間隔（ms）。
 struct RecentIKIEntry: Identifiable {
     let id: Int       // position index (0 = oldest)
+    let key: String
     let iki: Double   // inter-keystroke interval in ms
     /// Color tier: fast <150ms, slow >400ms, medium otherwise.
     var isFast: Bool { iki < 150 }

@@ -1156,6 +1156,11 @@ struct ChartsView: View {
 
     // MARK: - Recent IKI bar chart (live, updated every 0.5s)
 
+    /// Set to true to show the actual key label above each IKI bar.
+    /// WARNING: enabling this exposes keystrokes (including passwords) visually.
+    /// Set to false (default) to hide key names for privacy.
+    private let ikichartShowKeyLabels = false
+
     /// Bar chart of IKI (ms) for the last 20 keystrokes. Bars are color-coded by speed.
     /// 直近20打鍵のIKI棒グラフ。速度に応じて色分けする。
     @ViewBuilder
@@ -1170,7 +1175,7 @@ struct ChartsView: View {
             }
         } else {
             Chart(entries) { item in
-                BarMark(
+                let bar = BarMark(
                     x: .value("Key", item.id),
                     y: .value("IKI (ms)", item.iki)
                 )
@@ -1178,6 +1183,15 @@ struct ChartsView: View {
                                  item.isSlow ? Color.red.opacity(0.8)  :
                                                Color.orange.opacity(0.75))
                 .cornerRadius(2)
+                if ikichartShowKeyLabels {
+                    bar.annotation(position: .top, spacing: 2) {
+                        Text(item.key)
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    bar
+                }
             }
             .chartXAxis {
                 AxisMarks { _ in AxisGridLine() }
