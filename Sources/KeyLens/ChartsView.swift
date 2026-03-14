@@ -13,14 +13,20 @@ struct ChartsView: View {
 
     /// Title of the section whose clipboard copy just succeeded (cleared after 1.5 s).
     @State private var copiedSection: String? = nil
-    /// Holds references to each section's rendered NSView for on-screen snapshotting.
+    /// Stores each chart section's SwiftUI global frame and the Charts NSWindow reference.
     @State private var snapperStore = SnapperStore()
+    /// Timer that drives real-time refresh on the Live tab.
+    @State private var liveTimer: Timer? = nil
 
     var body: some View {
         TabView(selection: $selectedTab) {
             summaryTab
                 .tabItem { Label(ChartTab.summary.rawValue, systemImage: ChartTab.summary.icon) }
                 .tag(ChartTab.summary)
+
+            liveTab
+                .tabItem { Label(ChartTab.live.rawValue, systemImage: ChartTab.live.icon) }
+                .tag(ChartTab.live)
 
             activityTab
                 .tabItem { Label(ChartTab.activity.rawValue, systemImage: ChartTab.activity.icon) }
@@ -45,6 +51,11 @@ struct ChartsView: View {
         .padding(.top, 8)
         .frame(minWidth: 680, minHeight: 480)
         .background(Color(NSColor.windowBackgroundColor))
+        .overlay(alignment: .topLeading) {
+            // Grabs the NSWindow reference and silences the beep on plain typing.
+            WindowGrabber(store: snapperStore).frame(width: 1, height: 1).opacity(0)
+            KeySilencer().frame(width: 1, height: 1).opacity(0)
+        }
     }
 
     // MARK: - Tabs
@@ -61,11 +72,30 @@ struct ChartsView: View {
         }
     }
 
+    // Live: real-time IKI chart, refreshed every second while this tab is active.
+    private var liveTab: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            chartSection(L10n.shared.chartTitleRecentIKI, helpText: L10n.shared.helpRecentIKI) { recentIKIChart }
+                .padding(24)
+            Spacer()
+        }
+        .onAppear {
+            model.refreshLiveData()
+            liveTimer?.invalidate()
+            liveTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                model.refreshLiveData()
+            }
+        }
+        .onDisappear {
+            liveTimer?.invalidate()
+            liveTimer = nil
+        }
+    }
+
     // Activity: all time-series charts — volume, speed, accuracy, patterns
     private var activityTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection(L10n.shared.chartTitleRecentIKI, helpText: L10n.shared.helpRecentIKI) { recentIKIChart }
                 chartSection("Daily Totals") { dailyTotalsChart }
                 chartSection(L10n.shared.chartTitleTypingSpeed, helpText: L10n.shared.helpTypingSpeed) { dailyWPMChart }
                 chartSection(L10n.shared.chartTitleBackspaceRate, helpText: L10n.shared.helpBackspaceRate) { dailyAccuracyChart }
@@ -286,26 +316,30 @@ struct ChartsView: View {
                 .help("Copy chart as image")
                 .animation(.easeInOut(duration: 0.2), value: isCopied)
             }
-            contentView
-                .background(ChartSnapper(store: snapperStore, key: title))
+            ZStack(alignment: .topLeading) {
+                // ChartSnapper sits behind contentView as a ZStack sibling so it has
+                // a proper NSView superview and an always-current frame at click time.
+                ChartSnapper(store: snapperStore, key: title).allowsHitTesting(false)
+                contentView
+            }
         }
     }
 
     /// Captures the composited on-screen pixels for `title`'s section and writes to NSPasteboard.
-    /// Uses CGWindowListCreateImage so Metal-rendered SwiftUI Charts are captured correctly.
+    /// Uses GeometryReader (SwiftUI global frame) + CGWindowListCreateImage (Metal-compatible).
     private func snapshotToClipboard(title: String) {
         guard let snapper = snapperStore.views[title],
-              let target = snapper.superview,
-              let window = target.window else { return }
+              let superview = snapper.superview,
+              let window = superview.window else { return }
 
         let scale = window.backingScaleFactor
 
-        // View rect → screen coordinates (AppKit: bottom-left origin)
-        let viewInWindow  = target.convert(target.bounds, to: nil)
-        let viewOnScreen  = window.convertToScreen(viewInWindow)
-        let windowOnScreen = window.frame
+        // Convert snapper.frame (superview coords) → window coords → screen coords.
+        // snapper is a ZStack sibling of contentView, so its frame matches contentView exactly.
+        let inWindow   = superview.convert(snapper.frame, to: nil)
+        let onScreen   = window.convertToScreen(inWindow)
+        let winOnScreen = window.frame
 
-        // Capture the full window as CGImage (pixels, top-left CG origin)
         guard let windowImage = CGWindowListCreateImage(
             .null,
             .optionIncludingWindow,
@@ -313,17 +347,17 @@ struct ChartsView: View {
             [.bestResolution, .boundsIgnoreFraming]
         ) else { return }
 
-        // Map view rect into CGImage coordinates (top-left origin, pixels)
+        // Map screen rect → CGImage pixel rect (top-left origin).
         let cropRect = CGRect(
-            x: (viewOnScreen.minX - windowOnScreen.minX) * scale,
-            y: (windowOnScreen.maxY - viewOnScreen.maxY) * scale,
-            width:  viewOnScreen.width  * scale,
-            height: viewOnScreen.height * scale
+            x:      (onScreen.minX - winOnScreen.minX) * scale,
+            y:      (winOnScreen.maxY - onScreen.maxY) * scale,
+            width:  onScreen.width  * scale,
+            height: onScreen.height * scale
         )
         guard let cropped = windowImage.cropping(to: cropRect) else { return }
 
         let img = NSImage(cgImage: cropped,
-                          size: NSSize(width: viewOnScreen.width, height: viewOnScreen.height))
+                          size: NSSize(width: onScreen.width, height: onScreen.height))
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([img])
         copiedSection = title
@@ -1360,21 +1394,53 @@ struct ChartsView: View {
 
 // MARK: - NSView snapshot helpers
 
-/// Reference-type store for registered chart NSViews (does not trigger SwiftUI re-renders).
+/// Reference-type store for chart NSViews and the Charts NSWindow.
+/// Being a class means mutations don't trigger SwiftUI re-renders.
 final class SnapperStore {
     var views: [String: NSView] = [:]
+    weak var window: NSWindow?
 }
 
-/// Transparent NSView subclass used as a snapshot anchor.
+/// Tiny invisible NSViewRepresentable whose only job is to supply the NSWindow reference.
+private struct WindowGrabber: NSViewRepresentable {
+    let store: SnapperStore
+    func makeNSView(context: Context) -> NSView { NSView() }
+    func updateNSView(_ nsView: NSView, context: Context) {
+        if store.window == nil {
+            DispatchQueue.main.async { store.window = nsView.window }
+        }
+    }
+}
+
+/// Accepts first responder so plain typing into the Charts window is silently swallowed
+/// instead of triggering the system beep. Cmd/Ctrl shortcuts are passed through normally.
+private final class KeySilencerView: NSView {
+    override var acceptsFirstResponder: Bool { true }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.makeFirstResponder(self)
+    }
+    override func keyDown(with event: NSEvent) {
+        guard event.modifierFlags.intersection([.command, .control]).isEmpty else {
+            super.keyDown(with: event); return
+        }
+        // Plain typing is captured by the CGEvent tap — just swallow it here.
+    }
+}
+
+private struct KeySilencer: NSViewRepresentable {
+    func makeNSView(context: Context) -> KeySilencerView { KeySilencerView() }
+    func updateNSView(_ nsView: KeySilencerView, context: Context) {}
+}
+
+/// Transparent NSView subclass used as a position anchor inside each chart section.
 private final class SnapperHost: NSView {}
 
-/// Registers the rendered NSView of each chart section into a SnapperStore.
+/// Registers the chart section's NSView into SnapperStore for later screen capture.
 private struct ChartSnapper: NSViewRepresentable {
     let store: SnapperStore
     let key: String
-
     func makeNSView(context: Context) -> SnapperHost { SnapperHost() }
-
     func updateNSView(_ nsView: SnapperHost, context: Context) {
         store.views[key] = nsView
     }

@@ -31,6 +31,7 @@ struct SectionHeader: View {
 
 enum ChartTab: String, CaseIterable, Identifiable {
     case summary     = "Summary"
+    case live        = "Live"
     case activity    = "Activity"
     case keyboard    = "Keyboard"
     case ergonomics  = "Ergonomics"
@@ -42,6 +43,7 @@ enum ChartTab: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .summary:    return "info.circle"
+        case .live:       return "waveform"
         case .activity:   return "chart.line.uptrend.xyaxis"
         case .keyboard:   return "square.grid.3x3"
         case .ergonomics: return "figure.walk"
