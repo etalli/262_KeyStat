@@ -6,9 +6,9 @@ extension ChartsView {
     var summaryTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection(L10n.shared.intelligenceSection, helpText: L10n.shared.helpIntelligence) { intelligenceGroup }
-                chartSection("Weekly Report") { weeklyDeltaSection }
                 chartSection("Activity Calendar", helpText: L10n.shared.helpActivityCalendar) { activityCalendarChart }
+                chartSection("Weekly Report") { weeklyDeltaSection }
+                chartSection(L10n.shared.intelligenceSection, helpText: L10n.shared.helpIntelligence) { intelligenceGroup }
             }
             .padding(24)
         }
