@@ -75,7 +75,6 @@ struct ChartsView: View {
 
     // MARK: - Section wrapper
 
-    @ViewBuilder
     func chartSection<C: View>(_ title: String, helpText: String? = nil, showSort: Bool = false, @ViewBuilder content: () -> C) -> some View {
         let contentView = AnyView(content())
         let isCopied = copiedSection == title
