@@ -21,6 +21,12 @@ struct ChartsView: View {
     /// Fixed width keeps the live IKI snapshot compact when copying to the clipboard.
     /// 最新20打鍵グラフのコピーサイズを安定させるための固定幅。
     private let recentIKIChartWidth: CGFloat = 560
+    /// Slightly taller plot area leaves room for top annotations without making the snapshot too tall.
+    /// 上端注釈が切れないように、コピー全体を伸ばしすぎず最小限だけ高さを増やす。
+    private let recentIKIPlotHeight: CGFloat = 200
+    /// Extra Y-axis headroom prevents top annotations from being clipped at the 300ms ceiling.
+    /// 300ms天井で上端注釈が切れないように、表示用のヘッドルームを少し確保する。
+    private let recentIKIChartMaxDisplay: Double = 340
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -80,9 +86,13 @@ struct ChartsView: View {
     private var liveTab: some View {
         VStack(alignment: .leading, spacing: 0) {
             chartSection(L10n.shared.chartTitleRecentIKI, helpText: L10n.shared.helpRecentIKI) { recentIKIChart }
-                .padding(24)
-            Spacer()
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 24)
+                .padding(.leading, 24)
+                .padding(.bottom, 24)
+                .padding(.trailing, 12)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear {
             model.refreshLiveData()
             liveTimer?.invalidate()
@@ -1274,6 +1284,7 @@ struct ChartsView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(width: recentIKIChartWidth, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 Chart(entries) { item in
@@ -1306,14 +1317,14 @@ struct ChartsView: View {
                 .chartXAxis {
                     AxisMarks { _ in AxisGridLine() }
                 }
-                .chartYScale(domain: 0...300)
+                .chartYScale(domain: 0...recentIKIChartMaxDisplay)
                 .chartYAxis {
                     AxisMarks(position: .leading, values: [0, 100, 200, 300]) { value in
                         AxisValueLabel { Text("\(value.as(Double.self).map { Int($0) } ?? 0)ms") }
                         AxisGridLine()
                     }
                 }
-                .frame(height: 180)
+                .frame(height: recentIKIPlotHeight)
                 HStack(spacing: 16) {
                     Label("Fast (<150ms)", systemImage: "circle.fill").foregroundStyle(.green)
                     Label("Medium",        systemImage: "circle.fill").foregroundStyle(.orange)
@@ -1323,6 +1334,7 @@ struct ChartsView: View {
                 .foregroundStyle(.secondary)
             }
             .frame(width: recentIKIChartWidth, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
