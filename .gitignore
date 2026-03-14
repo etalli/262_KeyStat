@@ -26,3 +26,6 @@ Release/
 .claude/
 test_output.txt
 KeyLens-backup-*.json
+
+# references
+references/
