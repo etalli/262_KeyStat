@@ -8,14 +8,14 @@ extension ChartsView {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
                 chartSection(L10n.shared.appsAllTime, helpText: L10n.shared.helpApps, showSort: true) { topAppsChart }
-                chartSection(L10n.shared.appsToday, showSort: true) { todayTopAppsChart }
+                chartSection(L10n.shared.appsToday, helpText: L10n.shared.helpAppsToday, showSort: true) { todayTopAppsChart }
                 if !model.appErgScores.isEmpty {
                     chartSection(L10n.shared.appErgScoreSection, helpText: L10n.shared.helpAppErgScore) {
                         appErgScoreTable
                     }
                 }
                 chartSection(L10n.shared.devicesAllTime, helpText: L10n.shared.helpDevices, showSort: true) { topDevicesChart }
-                chartSection(L10n.shared.devicesToday, showSort: true) { todayTopDevicesChart }
+                chartSection(L10n.shared.devicesToday, helpText: L10n.shared.helpDevicesToday, showSort: true) { todayTopDevicesChart }
                 if !model.deviceErgScores.isEmpty {
                     chartSection(L10n.shared.deviceErgScoreSection, helpText: L10n.shared.helpDeviceErgScore) {
                         deviceErgScoreTable

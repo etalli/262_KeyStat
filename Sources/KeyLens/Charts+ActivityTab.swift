@@ -10,8 +10,8 @@ extension ChartsView {
                 chartSection(L10n.shared.chartTitleTypingSpeed, helpText: L10n.shared.helpTypingSpeed) { dailyWPMChart }
                 chartSection(L10n.shared.chartTitleBackspaceRate, helpText: L10n.shared.helpBackspaceRate) { dailyAccuracyChart }
                 chartSection("Hourly Distribution", helpText: L10n.shared.helpHourlyDistribution) { hourlyDistributionChart }
-                chartSection("Daily Totals") { dailyTotalsChart }
-                chartSection("Monthly Totals") { monthlyTotalsChart }
+                chartSection("Daily Totals", helpText: L10n.shared.helpDailyTotals) { dailyTotalsChart }
+                chartSection("Monthly Totals", helpText: L10n.shared.helpMonthlyTotals) { monthlyTotalsChart }
             }
             .padding(24)
         }

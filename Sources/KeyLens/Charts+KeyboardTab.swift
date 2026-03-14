@@ -7,10 +7,10 @@ extension ChartsView {
     var keyboardTab: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
-                chartSection("Keyboard Heatmap") { KeyboardHeatmapView(counts: model.keyCounts) }
-                chartSection("Top 20 Keys — All Time", showSort: true) { topKeysChart }
-                chartSection("Key Categories") { categoryChart }
-                chartSection("Top 10 Keys per Day", showSort: true) { perDayChart }
+                chartSection("Keyboard Heatmap", helpText: L10n.shared.helpKeyboardHeatmap) { KeyboardHeatmapView(counts: model.keyCounts) }
+                chartSection("Top 20 Keys — All Time", helpText: L10n.shared.helpTopKeys, showSort: true) { topKeysChart }
+                chartSection("Key Categories", helpText: L10n.shared.helpKeyCategories) { categoryChart }
+                chartSection("Top 10 Keys per Day", helpText: L10n.shared.helpTopKeysPerDay, showSort: true) { perDayChart }
             }
             .padding(24)
         }

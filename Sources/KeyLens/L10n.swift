@@ -594,6 +594,83 @@ final class L10n {
         ja("スコア", en: "Score")
     }
 
+    var helpWeeklyReport: String {
+        ja(
+            "今週と先週の主要指標を比較します。Δ列は変化量を示し、改善は緑、悪化は赤で表示されます。\n\n表示には最低2週間分のデータが必要です。",
+            en: "Compares key metrics between this week and last week. The Δ column shows the change — green means improvement, red means regression.\n\nRequires at least two weeks of data to display."
+        )
+    }
+
+    var helpDailyTotals: String {
+        ja(
+            "日別の総打鍵数を棒グラフで表示します。曜日ごとの入力量の傾向や、作業が多い日・少ない日を把握できます。",
+            en: "Total keystrokes per day shown as a bar chart. Useful for spotting your busiest and lightest days, and weekly patterns."
+        )
+    }
+
+    var helpMonthlyTotals: String {
+        ja(
+            "月別の総打鍵数を棒グラフで表示します。長期的な入力量のトレンドや季節的な変動を確認できます。",
+            en: "Total keystrokes per month. Useful for tracking long-term trends in typing volume over weeks and months."
+        )
+    }
+
+    var helpKeyboardHeatmap: String {
+        ja(
+            "キーボード上の各キーの使用頻度を色の濃さで表示します。よく使うキーほど濃い色になります。\n\n負荷ビューに切り替えると、同指連続入力（高負荷バイグラム）が多いキーを確認できます。",
+            en: "Visualizes keystroke frequency across the keyboard — darker keys are used more often.\n\nSwitch to the Strain view to highlight keys involved in high-strain same-finger bigrams."
+        )
+    }
+
+    var helpTopKeys: String {
+        ja(
+            "累計打鍵数の多いキー上位20件をランキング表示します。最も頻繁に使うキーを把握できます。\n\nソートボタンで昇順・降順を切り替えられます。",
+            en: "The 20 most-pressed keys ranked by total count. Shows which keys you rely on most.\n\nUse the sort button to toggle ascending/descending order."
+        )
+    }
+
+    var helpKeyCategories: String {
+        ja(
+            "打鍵をキーの種類（アルファベット・数字・記号・修飾キー・ナビゲーション・スペースなど）ごとに集計した円グラフです。\n\nタイピング用途（執筆・開発・チャット）の傾向が読み取れます。",
+            en: "Pie chart breaking down keystrokes by key type: alphabet, numbers, symbols, modifiers, navigation, space, and more.\n\nThe distribution reflects your typical typing context — prose, coding, or chat."
+        )
+    }
+
+    var helpTopKeysPerDay: String {
+        ja(
+            "日ごとに最も多く押されたキー上位10件を積み上げ棒グラフで表示します。日によって使用キーの傾向がどう変わるかを確認できます。",
+            en: "Top 10 keys per day shown as a stacked bar chart. Reveals how your key usage distribution shifts from day to day."
+        )
+    }
+
+    var helpAppsToday: String {
+        ja(
+            "本日のアプリ別打鍵数を表示します。今日どのアプリで最も多くタイプしているかをリアルタイムで確認できます。",
+            en: "Today's keystroke counts grouped by application. Shows which apps you have been typing in most so far today."
+        )
+    }
+
+    var helpDevicesToday: String {
+        ja(
+            "本日のデバイス別打鍵数を表示します。内蔵キーボードと外付けキーボードの使用割合を今日の分だけ確認できます。",
+            en: "Today's keystroke counts grouped by keyboard device. Useful for checking how much you have used each keyboard today."
+        )
+    }
+
+    var helpShortcuts: String {
+        ja(
+            "⌘ を含むキーボードショートカットの使用頻度ランキングを表示します。よく使うショートカットや偏りを把握できます。\n\nソートボタンで昇順・降順を切り替えられます。",
+            en: "Ranking of keyboard shortcuts that include ⌘. Shows which shortcuts you use most often.\n\nUse the sort button to toggle ascending/descending order."
+        )
+    }
+
+    var helpAllCombos: String {
+        ja(
+            "修飾キー（⌘ ⌥ ⌃ ⇧）を含むすべてのキーコンビネーションの使用頻度を表示します。ショートカットの全体像を把握できます。\n\nソートボタンで昇順・降順を切り替えられます。",
+            en: "All recorded key combinations involving modifiers (⌘ ⌥ ⌃ ⇧), ranked by frequency. Gives a complete picture of your shortcut usage.\n\nUse the sort button to toggle ascending/descending order."
+        )
+    }
+
     var intelligenceSection: String {
         ja("インテリジェンス", en: "Intelligence")
     }
