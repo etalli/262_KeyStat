@@ -3,6 +3,7 @@
 #
 # Usage:
 #   ./build.sh             # Build App Bundle only
+#   ./build.sh --clean     # Remove all build artifacts (.build, app, dmg, zip)
 #   ./build.sh --run       # Build and launch immediately
 #   ./build.sh --install   # Build, install to /Applications, and launch (recommended)
 #   ./build.sh --dmg       # Build and create a distributable DMG + ZIP
