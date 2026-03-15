@@ -1,25 +1,26 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+try:
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-prompt = """
-Analyze this macOS keyboard analysis tool repository.
+repo = "https://github.com/etalli/262_KeyLens"
 
-Focus on:
-- typing ergonomics metrics
-- keyboard layout analysis
-- visualization improvements
-- privacy-safe logging
-- performance
+    prompt = """
+Review this GitHub repository and propose improvements.
 
-Propose 3 concrete GitHub issues.
+{repo}
+
+Return 3 GitHub issue ideas with short descriptions.
 """
 
-response = client.responses.create(
-    model="gpt-4.1-mini",
-    input=prompt
-)
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt
+    )
 
-with open("issue.txt","w") as f:
-    f.write(response.output_text)
+    print(response.output_text)
+
+except Exception as e:
+    print("AI review failed:")
+    print(str(e))
