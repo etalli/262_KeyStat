@@ -1,26 +1,29 @@
 import os
+import subprocess
 from openai import OpenAI
 
-try:
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-    repo = "https://github.com/etalli/262_KeyLens"
+files = subprocess.check_output(
+    ["git", "ls-files"], text=True
+)
 
-    prompt = """
-Review this GitHub repository and propose improvements.
+prompt = f"""
+You are reviewing a GitHub repository.
 
-{repo}
+Repository URL:
+https://github.com/etalli/262_KeyLens
 
-Return 3 GitHub issue ideas with short descriptions.
+Project file list:
+
+{files}
+
+Suggest 3 useful GitHub issues to improve this project.
 """
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
+response = client.responses.create(
+    model="gpt-4.1-mini",
+    input=prompt
+)
 
-    print(response.output_text)
-
-except Exception as e:
-    print("AI review failed:")
-    print(str(e))
+print(response.output_text)
